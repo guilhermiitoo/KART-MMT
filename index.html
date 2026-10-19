@@ -2848,7 +2848,7 @@ $('fases').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(
 setMaxP(MAXP);$('vp1').addEventListener('click',()=>cycleVeh(0));$('vp2').addEventListener('click',()=>cycleVeh(1));showVeh();
 function goMenuOrStart(){if(mode==='online')openLobby();else{initChamp();start()}}
 function toMenuOrLobby(){if(mode==='online'){openLobby();online.players.forEach(p=>{p.ready=false;p.kart=null;tx(p,{t:'lobbyback'})});pushLobby()}else{state='menu';$('sMenu').classList.add('on');selectStage(mapaAtual())}}
-function backFromEnd(){$('sEnd').classList.remove('on');if(CH.on&&CH.i<CAMP.length-1){CH.i++;start();return}CH.on=false;toMenuOrLobby()}
+function backFromEnd(){$('sEnd').classList.remove('on');if(CH.on&&CH.i<CAMP.length-1){CH.i++;start();return}CH.on=false;if(mode==='online'&&CFG.fila&&window.FILA){FILA.novaSala();return}toMenuOrLobby()}
 function quitRace(){update.fe=0;CH.on=false;$('top').style.display='none';$('mini').style.display='none';$('div').style.display='none';$('big').style.display='none';document.querySelectorAll('.pv').forEach(x=>x.style.display='none');toMenuOrLobby()}
 addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
  if(state==='menu'){if(e.code==='Digit1')setMode(1);if(e.code==='Digit2')setMode(2);if(e.code==='Digit3')setMode('online');if(e.code==='ArrowLeft')cycle(-1);if(e.code==='ArrowRight')cycle(1);if(e.code==='ArrowUp')cycleFase(-1);if(e.code==='ArrowDown')cycleFase(1);if(e.code==='KeyQ')cycleModo(-1);if(e.code==='KeyE')cycleModo(1);if(e.code==='KeyV')cycleVeh(0);if(e.code==='KeyB')cycleVeh(1);if(e.code==='Enter'||e.code==='Space')goMenuOrStart()}
@@ -2909,8 +2909,8 @@ function renderLobby(){const el=$('slots');if(!el)return;let h='';for(let i=0;i<
   h+=p?`<div class="ps6 j${p.ready?' r':''}"><span class="dot" style="background:${p.ci>=0?hexc(p.ci):'#D6DEE2'}"></span><span class="nm6">${p.name||'(digitando…)'}</span><small>${!p.conn?'SAIU':p.ready?'✔ PRONTO':'ESCOLHENDO'}</small></div>`:`<div class="ps6"><span class="dot"></span><span class="nm6">VAGA ${i+1}</span><small>LIVRE</small></div>`}
  el.innerHTML=h;lobbyMsg()}
 function readyN(){return online.players.filter(p=>p.ready&&p.conn&&p.conn.open).length}
-function lobbyMsg(){const n=readyN();$('lmsg').textContent=online.autoT>0?'TODOS NA LARGADA! COMEÇA EM '+Math.ceil(online.autoT)+'…':
- 'PRONTOS: '+n+' / '+online.players.length+' · MÁXIMO '+MAXP+' JOGADORES · COM '+Math.min(4,MAXP)+' PRONTOS COMEÇA SOZINHO · ENTER / A = INICIAR AGORA · ESC = VOLTAR'}
+function lobbyMsg(){const n=readyN();$('lmsg').textContent=(window.FILA?FILA.txt()+' · ':'')+(online.autoT>0?'TODOS NA LARGADA! COMEÇA EM '+Math.ceil(online.autoT)+'…':
+ 'PRONTOS: '+n+' / '+online.players.length+' · MÁXIMO '+MAXP+' JOGADORES · COM '+Math.min(4,MAXP)+' PRONTOS COMEÇA SOZINHO · ENTER / A = INICIAR AGORA · ESC = VOLTAR')}
 function lobbyStart(force){if(readyN()<1){$('lmsg').textContent='Ninguém está PRONTO ainda — peça para apertarem PRONTO no celular';return}online.autoT=0;initChamp();start()}
 function lobbyTick(dt){demoTick(dt);const n=readyN();if(n>=Math.min(4,MAXP)){if(online.autoT<=0)online.autoT=5;online.autoT-=dt;if(online.autoT<=0){online.autoT=0;lobbyStart();return}}else online.autoT=0;
  online.stT-=dt;if(online.stT<=0){online.stT=1;lobbyMsg()}}
@@ -3732,6 +3732,21 @@ on('visuals',dt=>karts.forEach(k=>{if(k.trick){k.trA=Math.min(k.trA+dt*12,Math.P
 
 /* ===== FIM · CORRIDA+ ===== */
 
+/* ===== FILA AUTOMÁTICA (online): pódio 10 s → sala nova com QR novo e sem jogadores =====
+   Tecla R liga/desliga. No campeonato, entre um mapa e outro só segue para a próxima corrida. */
+(function(){if(CFG.fila===undefined)CFG.fila=true;const SEG=10;let t=0;
+ const txt=()=>'🔁 FILA AUTOMÁTICA: '+(CFG.fila?'LIGADA':'DESLIGADA')+' (tecla R)';
+ addEventListener('keydown',e=>{if(e.code!=='KeyR'||e.repeat||state==='go'||state==='count')return;CFG.fila=!CFG.fila;saveCfg();if(window.SOM)SOM.banner(txt(),1.4);if(state==='lobby')lobbyMsg();if(state==='end'&&!CFG.fila)$('endgo').textContent='ENTER / A PARA CONTINUAR'});
+ window.FILA={txt,novaSala};
+ function novaSala(){online.players.forEach(p=>tx(p,{t:'reset'}));online.players=[];CH.on=false;
+  const old=online.peer;online.peer=null;setTimeout(()=>{try{old&&old.destroy()}catch(e){}},800);$('qr').textContent='Gerando sala nova…';$('qroom').textContent='';$('qurl').textContent='';
+  $('sEnd').classList.remove('on');openLobby()}
+ on('finish',()=>{t=mode==='online'&&CFG.fila?SEG:0});
+ on('visuals',dt=>{if(!t)return;if(state!=='end'||mode!=='online'||!CFG.fila){t=0;return}t-=dt;
+  const meio=CH.on&&CH.i<CAMP.length-1;$('endgo').textContent=(meio?'PRÓXIMA CORRIDA EM ':'NOVA SALA (QR NOVO) EM ')+Math.max(1,Math.ceil(t))+' s · ENTER = já';
+  if(t<=0){t=0;if(meio)backFromEnd();else novaSala()}});
+})();
+
 /* ===== ASSISTÊNCIA DE DIREÇÃO E TRAÇÃO (para quem nunca jogou) =====
    AUTOMÁTICA SÓ NAS CURVAS: só para pilotos humanos. Na curva o kart acompanha a pista sozinho, se afasta da beira
    e escorrega menos; quem também vira continua mandando. Na reta não faz nada. Quem vira de propósito sempre manda.
@@ -3955,6 +3970,7 @@ function onData(d){if(!d||!d.t)return;
  else if(d.t==='buzz'){if(Date.now()-(onData.bz||0)<80)return;onData.bz=Date.now();try{navigator.vibrate&&navigator.vibrate(d.ms||150)}catch(e){}}
  else if(d.t==='end'){$('ep').textContent=d.place+'º LUGAR';$('ew').textContent='Vencedor: '+d.win;$('enx').textContent=d.next?d.next+' · aguarde a TV':'Aguarde a próxima corrida na TV';show('e')}
  else if(d.t==='lobbyback'){me.ready=false;show('j');renderChars()}
+ else if(d.t==='reset'){me.ready=false;$('ep').textContent='VALEU!';$('ew').textContent=($('ep').dataset.p||'')+'A sala desta corrida foi encerrada.';$('enx').textContent='Para jogar de novo, escaneie o QR Code NOVO na TV 📱';show('e');try{conn&&conn.close()}catch(e){}}
  else if(d.t==='full')upd('Sala cheia. Aguarde a próxima corrida.')}
 /* iPhone: a conexão pode travar sem dar erro, ou cair quando a tela apaga — por isso tem prazo e reconecta ao voltar */
 let again=null;
