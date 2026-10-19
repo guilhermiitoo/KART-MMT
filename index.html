@@ -50,7 +50,7 @@ table{width:100%;border-collapse:collapse;margin-bottom:2.4vh}th{background:#1F4
 .pv.sm .tl,.pv.sm .tr{top:2vh}.pv.sm.r0 .tl,.pv.sm.r0 .tr{top:11.5vh}
 .pv.sm .pos{font-size:4.5vh}.pv.sm .lap{font-size:1.4vh}.pv.sm .nm{font-size:1.7vh}
 .pv.sm .bl{bottom:1.5vh}.pv.sm .spd b{font-size:3.2vh}.pv.sm .spd span{font-size:1.1vh}.pv.sm .item{width:4.6vh;height:4.6vh;font-size:1vh}.pv.sm .item i{font-size:2vh}.pv.sm .msg{font-size:2.4vh;top:40%}
-.pv .nm{font-size:2.4vh}
+.pv .nm{font-size:4vh;color:#fff;display:inline-block;padding:.4vh 1.2vw;border-radius:1vh;border:.35vh solid #fff;box-shadow:0 .4vh 1.4vh rgba(0,0,0,.35);text-shadow:0 2px 3px rgba(0,0,0,.45)}.pv.sm .nm{font-size:2.8vh}
 .modes .mode.on.on3{background:#11A86B;border-color:#11A86B;box-shadow:0 6px 20px rgba(17,168,107,.4)}
 .lrow{display:flex;gap:3vw;align-items:center;margin-bottom:2vh}
 .qrbox{text-align:center;flex:none}#qr{width:32vh;height:32vh;border:.3vh solid #D6DEE2;border-radius:1.2vh;padding:1vh;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;color:#5f7a85;font-size:1.8vh}
@@ -2717,7 +2717,7 @@ function placeOf(k){return [...karts].sort((a,b)=>(b.fin-a.fin)||(a.fin&&b.fin?a
 function grid(n){const c=n<=1?1:n<=2?2:n<=4?2:n<=6?3:n<=8?4:5,r=n<=2?1:2;return Array.from({length:n},(_,i)=>({x:(i%c)/c,y:Math.floor(i/c)/r,w:1/c,h:1/r,row:Math.floor(i/c),rows:r}))}
 function buildHud(){document.querySelectorAll('.pv').forEach(e=>e.remove());const G=grid(humans.length);
  humans.forEach((k,i)=>{const d=document.createElement('div'),q=G[i];d.className='pv'+(q.rows>1?' sm':'')+(q.row===0?' r0':'');d.style.display='block';d.style.left=q.x*100+'%';d.style.width=q.w*100+'%';d.style.top=q.y*100+'%';d.style.height=q.h*100+'%';d.style.bottom='auto';
-  d.innerHTML=`<div class="tl"><div class="pos"></div><div class="lap"></div></div><div class="tr"><div class="sc"></div><div class="nm" style="color:${hexc(k.i)}">${k.name}</div></div><div class="msg"></div>
+  d.innerHTML=`<div class="tl"><div class="pos"></div><div class="lap"></div></div><div class="tr"><div class="sc"></div><div class="nm" style="background:${hexc(k.i)}">${k.name}</div></div><div class="msg"></div>
   <div class="fcard"></div><div class="bl"><div class="spd"><b>0</b><span>KM/H</span></div><div class="item"></div></div>`;
   document.body.appendChild(d);k.hud={el:d,pos:d.querySelector('.pos'),lap:d.querySelector('.lap'),sc:d.querySelector('.sc'),msg:d.querySelector('.msg'),spd:d.querySelector('.spd b'),slots:d.querySelectorAll('.slot'),item:d.querySelector('.item'),fc:d.querySelector('.fcard')};emit('hudbuild',k,d)})}
 function hud(){const m=Math.floor(raceT/60),s=Math.floor(raceT%60);$('clock').textContent=m+':'+String(s).padStart(2,'0');
