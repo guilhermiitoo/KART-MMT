@@ -3733,7 +3733,7 @@ on('visuals',dt=>karts.forEach(k=>{if(k.trick){k.trA=Math.min(k.trA+dt*12,Math.P
 /* ===== FIM · CORRIDA+ ===== */
 
 /* ===== FILA AUTOMÁTICA (online): pódio 10 s → sala nova com QR novo e sem jogadores =====
-   Tecla R liga/desliga. No campeonato, entre um mapa e outro só segue para a próxima corrida. */
+   Tecla R liga/desliga. Campeonato (qualquer modo, sempre): entre um mapa e outro segue sozinho em 5 s. */
 (function(){if(CFG.fila===undefined)CFG.fila=true;const SEG=10;let t=0;
  const txt=()=>'🔁 FILA AUTOMÁTICA: '+(CFG.fila?'LIGADA':'DESLIGADA')+' (tecla R)';
  addEventListener('keydown',e=>{if(e.code!=='KeyR'||e.repeat||state==='go'||state==='count')return;CFG.fila=!CFG.fila;saveCfg();if(window.SOM)SOM.banner(txt(),1.4);if(state==='lobby')lobbyMsg();if(state==='end'&&!CFG.fila)$('endgo').textContent='ENTER / A PARA CONTINUAR'});
@@ -3741,10 +3741,11 @@ on('visuals',dt=>karts.forEach(k=>{if(k.trick){k.trA=Math.min(k.trA+dt*12,Math.P
  function novaSala(){online.players.forEach(p=>tx(p,{t:'reset'}));online.players=[];CH.on=false;
   const old=online.peer;online.peer=null;setTimeout(()=>{try{old&&old.destroy()}catch(e){}},800);$('qr').textContent='Gerando sala nova…';$('qroom').textContent='';$('qurl').textContent='';
   $('sEnd').classList.remove('on');openLobby()}
- on('finish',()=>{t=mode==='online'&&CFG.fila?SEG:0});
- on('visuals',dt=>{if(!t)return;if(state!=='end'||mode!=='online'||!CFG.fila){t=0;return}t-=dt;
-  const meio=CH.on&&CH.i<CAMP.length-1;$('endgo').textContent=(meio?'PRÓXIMA CORRIDA EM ':'NOVA SALA (QR NOVO) EM ')+Math.max(1,Math.ceil(t))+' s · ENTER = já';
-  if(t<=0){t=0;if(meio)backFromEnd();else novaSala()}});
+ const meio=()=>CH.on&&CH.i<CAMP.length-1;
+ on('finish',()=>{t=meio()?5:mode==='online'&&CFG.fila?SEG:0});
+ on('visuals',dt=>{if(!t)return;const m=meio();if(state!=='end'||(!m&&(mode!=='online'||!CFG.fila))){t=0;return}t-=dt;
+  $('endgo').textContent=(m?'PRÓXIMA CORRIDA EM ':'NOVA SALA (QR NOVO) EM ')+Math.max(1,Math.ceil(t))+' s · ENTER = já';
+  if(t<=0){t=0;if(m)backFromEnd();else novaSala()}});
 })();
 
 /* ===== ASSISTÊNCIA DE DIREÇÃO E TRAÇÃO (para quem nunca jogou) =====
