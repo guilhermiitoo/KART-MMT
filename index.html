@@ -69,6 +69,26 @@ table{width:100%;border-collapse:collapse;margin-bottom:2.4vh}th{background:#1F4
 #lfase{text-align:center;font-weight:900;font-size:2.2vh;color:#1F4E5F;letter-spacing:.08em;margin-bottom:1vh}#lwarn{color:#D9313F;font-weight:800;font-size:1.7vh;text-align:center;margin-bottom:1vh}
 </style></head><body>
 <script>window.PHONE=!!new URLSearchParams(location.search).get("join");addEventListener("error",e=>{if(String(e.message).includes("PHONEMODE"))e.preventDefault()});</script>
+<script>/* MQ: cliente MQTT mínimo sobre WebSocket (QoS 0). É o "carteiro" de reserva entre celular e notebook:
+   funciona em qualquer rede (5G, Wi-Fi da empresa) porque é uma conexão comum de site, sem P2P. */
+window.MQB=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081/mqtt'];
+window.mqUrl=i=>new URLSearchParams(location.search).get('mq')||MQB[i]||MQB[0];
+window.MQ=function(url,onMsg,onState){const te=new TextEncoder(),td=new TextDecoder(),subs=[];let ws=null,buf=new Uint8Array(0),ok=false,ping=null,dead=false;
+ const str=x=>{const b=te.encode(x);return[b.length>>8,b.length&255,...b]};
+ const pkt=(h,body)=>{const L=[];let n=body.length;do{let d=n%128;n=Math.floor(n/128);if(n>0)d|=128;L.push(d)}while(n>0);return new Uint8Array([h,...L,...body])};
+ const raw=b=>{try{ws&&ws.readyState===1&&ws.send(b)}catch(e){}};
+ const sub=t=>raw(pkt(0x82,[0,1,...str(t),0]));
+ function parse(){for(;;){if(buf.length<2)return;let i=1,len=0,m=1,b;do{if(i>=buf.length)return;b=buf[i++];len+=(b&127)*m;m*=128}while(b&128);if(buf.length<i+len)return;
+  const h=buf[0],body=buf.slice(i,i+len);buf=buf.slice(i+len);const ty=h>>4;
+  if(ty===2){if(body[1]===0){ok=true;subs.forEach(sub);clearInterval(ping);ping=setInterval(()=>raw(new Uint8Array([0xC0,0])),20000);onState&&onState(true)}}
+  else if(ty===3){const tl=(body[0]<<8)|body[1],topic=td.decode(body.slice(2,2+tl)),off=2+tl+(((h>>1)&3)?2:0);let d=null;try{d=JSON.parse(td.decode(body.slice(off)))}catch(e){}if(d)onMsg(topic,d)}}}
+ function open(){buf=new Uint8Array(0);try{ws=new WebSocket(url,'mqtt')}catch(e){setTimeout(open,3000);return}ws.binaryType='arraybuffer';
+  ws.onopen=()=>raw(pkt(0x10,[...str('MQTT'),4,2,0,30,...str('mk'+Math.random().toString(36).slice(2,12))]));
+  ws.onmessage=e=>{const a=new Uint8Array(e.data),c=new Uint8Array(buf.length+a.length);c.set(buf);c.set(a,buf.length);buf=c;parse()};
+  ws.onclose=()=>{const was=ok;ok=false;clearInterval(ping);if(was)onState&&onState(false);if(!dead)setTimeout(open,2000)};ws.onerror=()=>{try{ws.close()}catch(e){}}}
+ open();
+ return{get ok(){return ok},sub(t){subs.push(t);if(ok)sub(t)},pub(t,o){if(ok)raw(pkt(0x30,[...str(t),...te.encode(JSON.stringify(o))]))},close(){dead=true;clearInterval(ping);try{ws.close()}catch(e){}}}};
+</script>
 <canvas id="gl"></canvas>
 <div id="top"><div class="ttl"><b>KART DO KIT · MMT</b><span id="fasettl">CORRIDA PELA PRODUÇÃO</span></div><div id="clock">0:00</div></div>
 <div id="div"></div><canvas id="mini" width="400" height="280"></canvas><div id="big"></div>
@@ -2852,17 +2872,25 @@ const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l
  {urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},{urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},{urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'}]};
 const online={peer:null,id:null,players:[],autoT:0,stT:0};
 function tx(p,m){try{p&&p.conn&&p.conn.open&&p.conn.send(m)}catch(e){}}
-function joinURL(){return location.origin+location.pathname+'?join='+online.id}
+function joinURL(){const o=new URLSearchParams(location.search).get('mq');return location.origin+location.pathname+'?join='+online.id+'&b='+(online.mqi||0)+(o?'&mq='+encodeURIComponent(o):'')}
+/* reserva por MQTT: o notebook escolhe o 1º servidor que responder e manda o número dele no QR (&b=) */
+function mqStart(i){i=i||0;if(online.mq)online.mq.close();online.mqi=i;online.mqc={};const t0=Date.now();
+ const c=online.mq=MQ(mqUrl(i),(topic,d)=>{if(!d||!d.cid)return;const k=d.cid;let v=online.mqc[k];if(!v)v=online.mqc[k]={relay:true,open:true,ls:0,send:m=>c.pub('mmtkart/'+online.id+'/dn/'+k,m)};v.ls=Date.now();v.open=true;onNet(v,d)},
+  ok=>{if(ok&&online.id){renderQR();renderLobby()}});
+ c.sub('mmtkart/'+online.id+'/up');
+ setTimeout(()=>{if(online.mq===c&&!c.ok&&!new URLSearchParams(location.search).get('mq')&&i+1<MQB.length)mqStart(i+1)},7000)}
+setInterval(()=>{if(!online.mqc)return;const now=Date.now();for(const k in online.mqc){const v=online.mqc[k];if(v.open&&now-v.ls>9000){v.open=false;const pl=online.players.find(x=>x.conn===v);if(pl){pl.conn=null;if(!pl.kart)online.players=online.players.filter(x=>x!==pl);pushLobby()}}}},2000);
+function useConn(pl,c){if(!pl.conn||!pl.conn.open||(pl.conn.relay&&!c.relay))pl.conn=c}
 function openLobby(){mode='online';state='lobby';online.autoT=0;karts.forEach(k=>{scene.remove(k.g);scene.remove(k.sh)});karts=[];humans=[];$('sMenu').classList.remove('on');$('sEnd').classList.remove('on');$('sLobby').classList.add('on');
  $('lfase').textContent=faseTxt()+' · Q/E MODO · ↑/↓ MAPA';selectStage(mapaAtual());
  $('lwarn').textContent=location.protocol==='file:'?'⚠ Você abriu o arquivo direto do computador. Para os celulares entrarem, abra o jogo pelo link do site (Netlify).':'';
  demoStart();if(!online.peer)createPeer();renderLobby()}
 function createPeer(){const PC=window.FakePeer||window.Peer;if(!PC){$('qr').textContent='Biblioteca online não carregou';return}
- online.id=Math.random().toString(36).slice(2,7).toUpperCase();const p=new PC('mmtkart-'+online.id,{config:ICE});online.peer=p;$('qr').textContent='Conectando ao servidor…';
+ online.id=Math.random().toString(36).slice(2,7).toUpperCase();const p=new PC('mmtkart-'+online.id,{config:ICE});online.peer=p;$('qr').textContent='Conectando ao servidor…';mqStart(0);
  p.on('open',()=>{renderQR();renderLobby()});
- p.on('error',e=>{if(e&&e.type==='unavailable-id'){try{p.destroy()}catch(_){}online.peer=null;createPeer()}else $('qr').textContent='Erro de conexão ('+(e&&e.type)+'). Verifique a internet.'});
+ p.on('error',e=>{if(e&&e.type==='unavailable-id'){try{p.destroy()}catch(_){}online.peer=null;createPeer()}else if(!(online.mq&&online.mq.ok))$('qr').textContent='Erro de conexão ('+(e&&e.type)+'). Verifique a internet.'});
  p.on('disconnected',()=>{try{p.reconnect()}catch(e){}});
- p.on('connection',c=>{c.on('data',d=>onNet(c,d));c.on('close',()=>{const pl=online.players.find(x=>x.conn===c);if(pl){pl.conn=null;if(!pl.kart)online.players=online.players.filter(x=>x!==pl);pushLobby()}})})}
+ p.on('connection',c=>{c.on('data',d=>onNet(c,d));c.on('close',()=>{const pl=online.players.find(x=>x.conn===c);const rv=pl&&online.mqc&&online.mqc[pl.cid];if(rv&&rv.open){pl.conn=rv;return}if(pl){pl.conn=null;if(!pl.kart)online.players=online.players.filter(x=>x!==pl);pushLobby()}})})}
 /* fundo da tela do QR: robôs correndo e a câmera trocando de piloto */
 const demo={karts:[],t:0,i:0};
 function clearDemo(){demo.karts.forEach(k=>{scene.remove(k.g);scene.remove(k.sh);const j=karts.indexOf(k);if(j>=0)karts.splice(j,1)});demo.karts=[]}
@@ -2871,8 +2899,8 @@ function demoTick(dt){if(!demo.karts.length)return;demo.t+=dt;if(demo.t>6){demo.
  demo.karts.forEach(k=>{const inp=botInput(k,dt);inp.item=false;stepKart(k,inp,dt)})}
 function renderQR(){try{const q=qrcode(0,'M');q.addData(joinURL());q.make();$('qr').innerHTML='<img src="'+q.createDataURL(8,2)+'">'}catch(e){$('qr').textContent='QR indisponível'}$('qroom').textContent='SALA '+online.id;$('qurl').textContent=joinURL()}
 function onNet(c,d){if(!d||!d.t||!d.cid)return;let pl=online.players.find(x=>x.cid===d.cid);
- if(d.t==='hello'){if(!pl){if(online.players.length>=MAXP){try{c.send({t:'full'})}catch(e){}return}pl={cid:d.cid,name:'',ci:-1,ready:false,inp:{}};online.players.push(pl)}pl.conn=c;pushLobby();if(pl.kart&&(state==='go'||state==='count'))tx(pl,{t:'race'});return}
- if(!pl)return;
+ if(d.t==='hello'){if(!pl){if(online.players.length>=MAXP){try{c.send({t:'full'})}catch(e){}return}pl={cid:d.cid,name:'',ci:-1,ready:false,inp:{}};online.players.push(pl)}useConn(pl,c);pushLobby();if(pl.kart&&(state==='go'||state==='count'))tx(pl,{t:'race'});return}
+ if(!pl)return;useConn(pl,c);
  if(d.t==='profile'){if(VEH[d.veh])pl.veh=d.veh;pl.name=String(d.name||'').trim().slice(0,12).toUpperCase();if(d.ci>=0&&d.ci<6&&!online.players.some(o=>o!==pl&&o.ci===d.ci))pl.ci=d.ci;if(!pl.name||pl.ci<0)pl.ready=false;pushLobby()}
  else if(d.t==='ready'){pl.ready=!!d.v&&!!pl.name&&pl.ci>=0;pushLobby()}
  else if(d.t==='in')pl.inp=d}
@@ -3876,8 +3904,15 @@ const $=i=>document.getElementById(i);
 let cid=new URLSearchParams(location.search).get('cid');if(!cid)try{cid=localStorage.getItem('mmt_kart_cid');if(!cid){cid=Math.random().toString(36).slice(2);localStorage.setItem('mmt_kart_cid',cid)}}catch(e){cid=Math.random().toString(36).slice(2)}
 const VSV={"kart": "<svg viewBox=\"0 0 64 40\" width=\"58\"><rect x=\"10\" y=\"14\" width=\"40\" height=\"12\" rx=\"3\" fill=\"#0A84FF\"/><rect x=\"44\" y=\"17\" width=\"14\" height=\"7\" rx=\"2\" fill=\"#0A84FF\"/><rect x=\"18\" y=\"6\" width=\"6\" height=\"10\" fill=\"#fff\" stroke=\"#1F4E5F\"/><circle cx=\"28\" cy=\"8\" r=\"5\" fill=\"#FFE000\"/><circle cx=\"16\" cy=\"30\" r=\"6\" fill=\"#2B3A42\"/><circle cx=\"46\" cy=\"30\" r=\"6\" fill=\"#2B3A42\"/></svg>", "empilhadeira": "<svg viewBox=\"0 0 64 48\" width=\"58\"><rect x=\"6\" y=\"20\" width=\"30\" height=\"16\" rx=\"3\" fill=\"#0A84FF\"/><rect x=\"2\" y=\"22\" width=\"8\" height=\"14\" fill=\"#2B3A42\"/><path d=\"M12 20V6h22v14\" fill=\"none\" stroke=\"#5a4a4a\" stroke-width=\"3\"/><rect x=\"10\" y=\"4\" width=\"26\" height=\"4\" fill=\"#6E5A5A\"/><rect x=\"40\" y=\"4\" width=\"4\" height=\"36\" fill=\"#3A3A3A\"/><rect x=\"40\" y=\"38\" width=\"20\" height=\"3\" fill=\"#3A3A3A\"/><circle cx=\"14\" cy=\"40\" r=\"6\" fill=\"#2B3A42\"/><circle cx=\"32\" cy=\"40\" r=\"6\" fill=\"#2B3A42\"/></svg>", "paleteira": "<svg viewBox=\"0 0 64 48\" width=\"58\"><path d=\"M14 6l6 22\" stroke=\"#1F1F1F\" stroke-width=\"4\"/><rect x=\"6\" y=\"3\" width=\"16\" height=\"5\" rx=\"2\" fill=\"#1F1F1F\"/><path d=\"M16 26h12l4 8H16z\" fill=\"#F2B705\"/><rect x=\"28\" y=\"30\" width=\"34\" height=\"5\" fill=\"#F2B705\"/><circle cx=\"22\" cy=\"40\" r=\"5\" fill=\"#2B3A42\"/><circle cx=\"58\" cy=\"38\" r=\"3\" fill=\"#2B3A42\"/></svg>", "matrim": "<svg viewBox=\"0 0 64 40\" width=\"58\"><rect x=\"40\" y=\"14\" width=\"20\" height=\"14\" rx=\"3\" fill=\"#11A86B\"/><rect x=\"42\" y=\"6\" width=\"16\" height=\"3\" fill=\"#2B3A42\"/><path d=\"M44 9v6M56 9v6\" stroke=\"#4A4A4A\" stroke-width=\"2\"/><rect x=\"22\" y=\"20\" width=\"14\" height=\"6\" fill=\"#8A9AA3\"/><rect x=\"24\" y=\"12\" width=\"10\" height=\"8\" fill=\"#12B7E8\"/><rect x=\"4\" y=\"20\" width=\"14\" height=\"6\" fill=\"#8A9AA3\"/><rect x=\"6\" y=\"12\" width=\"10\" height=\"8\" fill=\"#F2B705\"/><circle cx=\"46\" cy=\"30\" r=\"5\" fill=\"#2B3A42\"/><circle cx=\"56\" cy=\"30\" r=\"5\" fill=\"#2B3A42\"/><circle cx=\"29\" cy=\"29\" r=\"3\" fill=\"#2B3A42\"/><circle cx=\"11\" cy=\"29\" r=\"3\" fill=\"#2B3A42\"/></svg>"};const VH=[['kart',VSV.kart,'KART','equilibrado'],['empilhadeira',VSV.empilhadeira,'EMPILHADEIRA','forte e estável'],['paleteira',VSV.paleteira,'PALETEIRA','ágil nas curvas'],['matrim',VSV.matrim,'MATRIM','rápido na reta']];
 let conn=null,me={name:'',ci:-1,ready:false,veh:'kart'},list=[],auto=true;try{me.name=localStorage.getItem('mmt_kart_nm')||'';me.veh=localStorage.getItem('mmt_kart_vh')||'kart'}catch(e){}$('pn').value=me.name;
-const send=m=>{m.cid=cid;try{conn&&conn.open&&conn.send(m)}catch(e){}};
+const P2=new URLSearchParams(location.search);let mq=null,lastRelay=0,fase='',p2pMsg='Conectando à sala '+room+'…';
+const send=m=>{m.cid=cid;try{if(conn&&conn.open){conn.send(m);return}}catch(e){}if(mq&&mq.ok)mq.pub('mmtkart/'+room+'/up',m)};
 const status=t=>$('pst').textContent=t;
+const linked=()=>(conn&&conn.open)||Date.now()-lastRelay<10000;
+function upd(t){if(t)p2pMsg=t;status(linked()?'Conectado ✔ · Sala '+room+(fase?' · '+fase:''):p2pMsg)}
+/* reserva por MQTT: funciona mesmo com o celular no 5G e o notebook em outro Wi-Fi */
+function relay(){mq=MQ(mqUrl(+P2.get('b')||0),(t,d)=>{lastRelay=Date.now();onData(d);upd()},ok=>{if(ok)hi()});mq.sub('mmtkart/'+room+'/dn/'+cid)}
+function hi(){if(!(mq&&mq.ok))return;mq.pub('mmtkart/'+room+'/up',{t:'hello',cid});if(me.name||me.ci>=0)mq.pub('mmtkart/'+room+'/up',{t:'profile',name:me.name,ci:me.ci,veh:me.veh,cid})}
+setInterval(()=>{if(mq&&mq.ok)mq.pub('mmtkart/'+room+'/up',{t:'hello',cid});upd()},3000);
 let wl=null;function wake(){try{if(navigator.wakeLock&&!wl&&document.visibilityState==='visible')navigator.wakeLock.request('screen').then(l=>{wl=l;l.addEventListener('release',()=>wl=null)}).catch(()=>{})}catch(e){}}
 function show(w){$('pj').hidden=w!=='j';$('pp').hidden=w!=='p';$('pe').hidden=w!=='e';document.body.classList.toggle('racing',w==='p');if(w==='p'){try{document.activeElement&&document.activeElement.blur()}catch(e){}window.scrollTo(0,0);wake()}}
 function renderVeh(){$('pv').innerHTML=VH.map(v=>`<div class="ch${me.veh===v[0]?' sel':''}" data-v="${v[0]}"><b>${v[1]}</b>${v[2]}<small>${v[3]}</small></div>`).join('')}
@@ -3889,23 +3924,23 @@ $('pc').addEventListener('click',e=>{const c=e.target.closest('[data-c]');if(!c|
 $('pn').addEventListener('input',()=>{me.name=$('pn').value.toUpperCase().slice(0,12);try{localStorage.setItem('mmt_kart_nm',me.name)}catch(e){}send({t:'profile',name:me.name,ci:me.ci,veh:me.veh});renderChars()});
 $('pr').addEventListener('click',()=>{if(!me.name||me.ci<0){status('Digite seu nome e escolha um piloto');return}$('pn').blur();send({t:'ready',v:!me.ready})});
 function onData(d){if(!d||!d.t)return;
- if(d.t==='lobby'){list=d.list||[];if(d.fase&&conn&&conn.open)status('Conectado ✔ · Sala '+room+' · '+d.fase);const m=list.find(o=>o.me);if(m){me.ready=m.ready;if(m.ci>=0)me.ci=m.ci}renderChars();if(!$('pj').hidden||d.state==='lobby'){}}
+ if(d.t==='lobby'){list=d.list||[];if(d.fase)fase=d.fase;upd();const m=list.find(o=>o.me);if(m&&!m.name&&me.name)send({t:'profile',name:me.name,ci:me.ci,veh:me.veh});if(m){me.ready=m.ready;if(m.ci>=0)me.ci=m.ci}renderChars();if(!$('pj').hidden||d.state==='lobby'){}}
  else if(d.t==='race'){show('p')}
  else if(d.t==='st'){$('ipos').textContent=d.pos+'º/'+d.n;$('ilap').textContent=(d.fase?d.fase+' ':'')+(d.fin?'CHEGOU!':'VOLTA '+d.lap+'/'+d.laps);$('iitem').textContent='ITEM: '+(d.itxt||({turbo:'⚡ TURBO',caixa:'📦 CAIXA',comp:'🎯 LANÇAR'}[d.item]||'–'));if($('pp').hidden)show('p')}
  else if(d.t==='msg'){$('imsg').textContent=d.m;clearTimeout(onData.mt);onData.mt=setTimeout(()=>$('imsg').textContent='',1800)}
  else if(d.t==='buzz'){try{navigator.vibrate&&navigator.vibrate(d.ms||150)}catch(e){}}
  else if(d.t==='end'){$('ep').textContent=d.place+'º LUGAR';$('ew').textContent='Vencedor: '+d.win;$('enx').textContent=d.next?d.next+' · aguarde a TV':'Aguarde a próxima corrida na TV';show('e')}
  else if(d.t==='lobbyback'){me.ready=false;show('j');renderChars()}
- else if(d.t==='full')status('Sala cheia (6 jogadores). Aguarde a próxima.')}
+ else if(d.t==='full')upd('Sala cheia. Aguarde a próxima corrida.')}
 /* iPhone: a conexão pode travar sem dar erro, ou cair quando a tela apaga — por isso tem prazo e reconecta ao voltar */
 let again=null;
-function connect(){const PC=window.FakePeer||window.Peer;if(!PC){status('Biblioteca online não carregou — recarregue a página');return}
- const peer=new PC(undefined,{config:ICE});let done=false;const to=setTimeout(()=>{if(!(conn&&conn.open)){status('Demorou para conectar — tentando de novo…');retry()}},15000);
+function connect(){const PC=window.FakePeer||window.Peer;if(!PC){upd('Biblioteca online não carregou — recarregue a página');return}
+ const peer=new PC(undefined,{config:ICE});let done=false;const to=setTimeout(()=>{if(!(conn&&conn.open)){upd('Conectando… (pode levar alguns segundos)');retry()}},15000);
  const retry=(ms)=>{if(done)return false;done=true;clearTimeout(to);try{peer.destroy()}catch(e){}again=setTimeout(connect,ms===0?0:2000);return true};connect.retry=retry;
  peer.on('open',()=>{conn=peer.connect('mmtkart-'+room,{reliable:true,serialization:'json'});
-  conn.on('open',()=>{clearTimeout(to);status('Conectado ✔ · Sala '+room);send({t:'hello'});if(me.name||me.ci>=0)send({t:'profile',name:me.name,ci:me.ci,veh:me.veh})});
-  conn.on('data',onData);conn.on('close',()=>{status('Conexão perdida — reconectando…');retry()});conn.on('error',()=>retry())});
- peer.on('error',e=>{status('Sem conexão com a TV ('+(e&&e.type)+') — tentando de novo…');retry()})}
+  conn.on('open',()=>{clearTimeout(to);upd('Conectado ✔ · Sala '+room);send({t:'hello'});if(me.name||me.ci>=0)send({t:'profile',name:me.name,ci:me.ci,veh:me.veh})});
+  conn.on('data',onData);conn.on('close',()=>{upd('Reconectando…');retry()});conn.on('error',()=>retry())});
+ peer.on('error',e=>{upd('Procurando o notebook ('+(e&&e.type)+')…');retry()})}
 /* controle por toque */
 const P={},pad=$('pp');
 function scan(ts){const now={};for(const t of ts){const el=document.elementFromPoint(t.clientX,t.clientY),b=el&&el.closest&&el.closest('[data-k]');if(b)now[b.dataset.k]=1}
@@ -3916,8 +3951,8 @@ pad.addEventListener('mousedown',e=>scan([e]));addEventListener('mouseup',()=>sc
 const au=$('auto');const tog=e=>{e.preventDefault();e.stopPropagation();auto=!auto;au.textContent='ACELERAR AUTOMÁTICO '+(auto?'✔':'✖');au.classList.toggle('off',!auto);push()};
 au.addEventListener('touchstart',tog,{passive:false});au.addEventListener('mousedown',tog);
 setInterval(()=>{if(!$('pp').hidden)push()},100);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;wake();if(!(conn&&conn.open)&&connect.retry){clearTimeout(again);status('Reconectando…');if(!connect.retry(0))connect()}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;wake();if(!(conn&&conn.open)&&connect.retry){clearTimeout(again);upd('Reconectando…');if(!connect.retry(0))connect()}});
 addEventListener('pageshow',e=>{if(e.persisted&&!(conn&&conn.open)&&connect.retry){clearTimeout(again);if(!connect.retry(0))connect()}});
-renderChars();connect();})();
+renderChars();relay();connect();})();
 </script>
 </body></html>
