@@ -21,10 +21,11 @@ html,body{height:100%;overflow:hidden;background:#DCE6EA;font-family:'Segoe UI',
 .item i{font-style:normal;font-size:3.2vh}
 .msg{position:absolute;left:0;right:0;top:28vh;text-align:center;font-weight:900;font-size:4vh;color:#1F4E5F;text-shadow:0 2px 0 #fff,0 0 14px #fff;opacity:0;transition:opacity .25s}
 .msg.on{opacity:1}
+.fcard{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);background:rgba(90,100,108,.82);color:#fff;font-weight:900;font-size:6vh;padding:1.6vh 4vw;border-radius:1.6vh;display:none;letter-spacing:.06em;text-shadow:none}.pv.sm .fcard{font-size:3.6vh}
 #div{position:fixed;left:50%;top:0;bottom:0;width:.6vh;margin-left:-.3vh;background:#fff;box-shadow:0 0 14px rgba(31,78,95,.4);display:none}
 #top{position:fixed;left:0;right:0;top:0;height:10.5vh;display:none;align-items:center;justify-content:space-between;padding:0 2.2vw;background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,255,255,.85));border-bottom:.35vh solid #0A84FF;box-shadow:0 6px 30px rgba(31,78,95,.15);z-index:4}
 #top .ttl b{font-size:3.4vh;letter-spacing:.06em;display:block}#top .ttl span{font-size:1.7vh;letter-spacing:.14em;color:#5f7a85;font-weight:700}
-#clock{font-size:5.6vh;font-weight:900;font-variant-numeric:tabular-nums}
+#top{background:none!important;border:0!important;box-shadow:none!important;pointer-events:none}#top .ttl{display:none}#clock{text-shadow:0 2px 0 #fff,0 0 12px rgba(255,255,255,.9);font-size:5.6vh;font-weight:900;font-variant-numeric:tabular-nums}
 #crit{display:flex;gap:.9vw}
 .cb{width:11.5vw;background:#fff;border:.2vh solid #D6DEE2;border-radius:1vh;padding:.5vh .7vw;font:800 1.45vh 'Segoe UI',Arial;color:#1F4E5F}
 .cb .tr{height:1.3vh;background:#DCE6EA;border-radius:1vh;margin-top:.4vh;overflow:hidden}.cb .fl{height:100%;border-radius:1vh;transition:background .3s}
@@ -59,7 +60,7 @@ table{width:100%;border-collapse:collapse;margin-bottom:2.4vh}th{background:#1F4
 .ps6 .nm6{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ps6.j{color:#1F4E5F;background:#fff}.ps6.r{border-color:#11A86B;background:#E6F7EF}.ps6 .dot{width:3vh;height:3vh;border-radius:50%;background:#D6DEE2;flex:none}.ps6 small{flex:none;font-size:1.4vh;letter-spacing:.08em}
 .ps6.r small{color:#11A86B}
-#fases .mode{padding:1.3vh 1vw;font-size:2.1vh}#fases .mode.on[data-f=gelo]{background:#2E9BE0;border-color:#2E9BE0;box-shadow:0 6px 20px rgba(46,155,224,.4)}#fases .mode.on[data-f=fogo]{background:#FF5A1F;border-color:#FF5A1F;box-shadow:0 6px 20px rgba(255,90,31,.4)}#fases .mode.on[data-f=camp]{background:#E0A800;border-color:#E0A800;box-shadow:0 6px 20px rgba(224,168,0,.4)}
+#fases .mode{padding:1.3vh 1vw;font-size:2.1vh}#fases .mode.on[data-f=gelo]{background:#2E9BE0;border-color:#2E9BE0;box-shadow:0 6px 20px rgba(46,155,224,.4)}#fases .mode.on[data-f=fogo]{background:#FF5A1F;border-color:#FF5A1F;box-shadow:0 6px 20px rgba(255,90,31,.4)}#fases .mode.on[data-f=amazonia]{background:#11A86B;border-color:#11A86B;color:#fff}#fases .mode.on[data-f=placa]{background:#1E7F4F;border-color:#1E7F4F;color:#fff}#fases .mode.on[data-f=camp]{background:#E0A800;border-color:#E0A800;box-shadow:0 6px 20px rgba(224,168,0,.4)}
 #veics .mode{padding:1vh 1vw;font-size:1.9vh;background:#fff;color:#1F4E5F}#lfase{text-align:center;font-weight:900;font-size:2.2vh;color:#1F4E5F;letter-spacing:.08em;margin-bottom:1vh}#lwarn{color:#D9313F;font-weight:800;font-size:1.7vh;text-align:center;margin-bottom:1vh}
 </style></head><body>
 <script>window.PHONE=!!new URLSearchParams(location.search).get("join");addEventListener("error",e=>{if(String(e.message).includes("PHONEMODE"))e.preventDefault()});</script>
@@ -70,7 +71,7 @@ table{width:100%;border-collapse:collapse;margin-bottom:2.4vh}th{background:#1F4
 <div id="sMenu" class="scr on"><div class="card">
 <span class="tag">01 · CORRIDA PELA PRODUÇÃO</span><h1>KART DO KIT</h1><h2>CORRIDA PELA PRODUÇÃO · PEGUE OS ITENS · CHEGUE EM PRIMEIRO</h2>
 <div class="modes"><div class="mode" id="m1">1 JOGADOR<small>contra 3 robôs</small></div><div class="mode on" id="m2">2 JOGADORES<small>TELA DIVIDIDA · +2 robôs</small></div><div class="mode" id="m3">📱 ONLINE<small>ATÉ 6 CELULARES</small></div></div>
-<div id="fases" class="modes"><div class="mode" data-f="gelo">❄️ GELO<small>escorrega · rampas na água</small></div><div class="mode" data-f="fogo">🔥 FOGO<small>lava · vulcão · bolas de fogo</small></div><div class="mode" data-f="camp">🏆 CAMPEONATO<small>GELO + FOGO · soma pontos</small></div></div>
+<div id="fases" class="modes"><div class="mode" data-f="gelo">❄️ GELO<small>escorrega · rampas na água</small></div><div class="mode" data-f="fogo">🔥 FOGO<small>lava · vulcão · bolas de fogo</small></div><div class="mode" data-f="amazonia">🌳 AMAZÔNIA<small>chuva · troncos · Rio Negro</small></div><div class="mode" data-f="placa">💻 PLACA SMT<small>trilha de cobre · V-cut</small></div><div class="mode" data-f="camp">🏆 CAMPEONATO<small>4 fases · soma pontos</small></div></div>
 <div id="veics" class="modes"><div class="mode" id="vp1"></div><div class="mode" id="vp2"></div></div>
 <div class="how">
 <div><b>FASES</b> · ❄️ GELO: placas que escorregam e rampas sobre a água · 🔥 FOGO: pule os rios de lava e fuja das bolas de fogo. Caiu? 2 s de castigo!</div>
@@ -2473,7 +2474,7 @@ const pitMeshes=[];
 function buildTrack(d){const hw=W/2,rt=roadTex(d.road),rm=new THREE.MeshStandardMaterial({map:rt,roughness:.9});
  const gs=[...d.gI].sort((a,b)=>a.a-b.a);
  if(!gs.length)world.add(ribbon(0,N,-hw,hw,.03,rm));else gs.forEach((g,k)=>{const nx=gs[(k+1)%gs.length];let e=nx.a;if(e<=g.b)e+=N;world.add(ribbon(g.b,e,-hw,hw,.03,rm))});
- gs.forEach(g=>{world.add(rampMesh(g));const pm=ribbon(g.a-1,g.b+1,-hw-26,hw+26,.035,pitMat(d.pit),12);pm.userData.pit=d.pit;world.add(pm);pitMeshes.push(pm);
+ gs.forEach(g=>{world.add(rampMesh(g));const pm=ribbon(g.a-1,g.b+1,-hw-26,hw+26,.035,d.pitMat?d.pitMat():pitMat(d.pit),12);pm.userData.pit=d.pit;world.add(pm);pitMeshes.push(pm);
   for(const e of[g.a,g.b])for(const s of[-1,1]){const p=ptAt(e/N,s*(hw+.8));const m=B(1.2,4.5,1.2,0xF2B705);m.position.set(p.x,2.25,p.z);world.add(m);const st=B(1.25,.7,1.25,0x1F2A30);st.position.set(p.x,3.2,p.z);world.add(st)}});
  /* barreiras (não ficam em cima de rampa/buraco) */
  const ok=[];for(let k=0;k<N;k+=2){if(d.gI.some(g=>ixd(k,g.r0-2)<g.b-g.r0+4))continue;ok.push(k)}
@@ -2484,7 +2485,7 @@ function buildTrack(d){const hw=W/2,rt=roadTex(d.road),rm=new THREE.MeshStandard
  const iceT=new THREE.CanvasTexture(cv(256,256,(g,w,h)=>{const gr=g.createLinearGradient(0,0,w,0);gr.addColorStop(0,'rgba(200,240,255,0)');gr.addColorStop(.12,'rgba(200,240,255,.8)');gr.addColorStop(.88,'rgba(200,240,255,.8)');gr.addColorStop(1,'rgba(200,240,255,0)');g.fillStyle=gr;g.fillRect(0,0,w,h);
   g.strokeStyle='rgba(255,255,255,.95)';g.lineWidth=2;for(let i=0;i<9;i++){g.beginPath();let x=30+Math.random()*196,y=Math.random()*h;g.moveTo(x,y);for(let s=0;s<4;s++){x+=(Math.random()-.5)*50;y+=Math.random()*40;g.lineTo(x,y)}g.stroke()}}));
  iceT.wrapS=iceT.wrapT=THREE.RepeatWrapping;iceT.encoding=THREE.sRGBEncoding;
- d.iI.forEach(z=>world.add(ribbon(z.a,z.b,z.l0,z.l1,.05,new THREE.MeshStandardMaterial({map:iceT,transparent:true,roughness:.05,metalness:.4,emissive:0x5FB8E0,emissiveIntensity:.25,depthWrite:false}),24)))}
+ d.iI.forEach(z=>world.add(ribbon(z.a,z.b,z.l0,z.l1,.05,new THREE.MeshStandardMaterial({map:d.slipTex?d.slipTex():iceT,transparent:true,roughness:.05,metalness:.4,emissive:0x5FB8E0,emissiveIntensity:.25,depthWrite:false}),24)))}
 /* ---------- placas / arcos ---------- */
 function ptAt(u,lat,off){const i=Math.round(u*N)%N,p=SP[i],r=RT[i];return{x:p.x+r.x*(lat||0),z:p.z+r.z*(lat||0),h:Math.atan2(TG[i].x,TG[i].z),i}}
 function labelTex(txt,col,sub){return new THREE.CanvasTexture(cv(1024,200,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);g.fillStyle=col;g.fillRect(0,h-26,w,26);g.fillStyle='#1F4E5F';g.font='900 '+(txt.length>22?74:96)+'px Segoe UI,Arial';g.textAlign='center';g.textBaseline='middle';g.fillText(txt,w/2,sub?72:88);if(sub){g.fillStyle='#5f7a85';g.font='700 40px Segoe UI,Arial';g.fillText(sub,w/2,142)}}))}
@@ -2676,7 +2677,7 @@ function vertical(k,dt){const q=gapOf(k.fi);let gy=0,hole=false,slope=0;
   else if(k.y<=gy){if(k.vy<-14){sfx(140,.15,'square');rumble(k,.4);k.shake=Math.max(k.shake,.5)}k.y=gy;k.vy=0;k.air=false;emit('land',k)}}
  k.prevRamp=!!q&&!hole;k.prevGy=gy;k.gy=k.air?(hole?-50:gy):gy;k.slope=k.air?0:slope}
 function fall(k){if(k.fallT>0)return;k.fallT=2;k.air=false;k.pit=false;k.vy=0;k.v=0;k.dOn=false;k.drift=0;k.boost=0;k.spin=0;
- say(k,ST.pit==='lava'?'🔥 CAIU NA LAVA! ⏱ 2s':'💧 CAIU NA ÁGUA GELADA! ⏱ 2s','#D9313F');rumble(k,1);k.shake=1.2;sfx(90,.6,'sawtooth',.12);emit('fall',k)}
+ say(k,ST.fallMsg?ST.fallMsg:ST.pit==='lava'?'🔥 CAIU NA LAVA! ⏱ 2s':'💧 CAIU NA ÁGUA GELADA! ⏱ 2s','#D9313F');rumble(k,1);k.shake=1.2;sfx(90,.6,'sawtooth',.12);emit('fall',k)}
 function respawn(k){const g=k.lastGap||ST.gI[0];const ni=(g.b+Math.ceil(6/SEG))%N;let di=ni-k.idx;if(di>N/2)di-=N;if(di<-N/2)di+=N;k.prog+=di;k.idx=ni;k.fi=ni;
  const lat=clamp(k.lat||0,-(W/2-4),W/2-4),p=SP[ni],r=RT[ni];k.x=p.x+r.x*lat;k.z=p.z+r.z*lat;k.h=k.mh=k.camH=Math.atan2(TG[ni].x,TG[ni].z);
  k.y=0;k.vy=0;k.air=false;k.pit=false;k.prevRamp=false;k.v=14;k.ghost=1.5;k.fallT=0;say(k,'DE VOLTA! ACELERA!','#11A86B');emit('respawn',k)}
@@ -2717,11 +2718,11 @@ function grid(n){const c=n<=1?1:n<=2?2:n<=4?2:n<=6?3:n<=8?4:5,r=n<=2?1:2;return 
 function buildHud(){document.querySelectorAll('.pv').forEach(e=>e.remove());const G=grid(humans.length);
  humans.forEach((k,i)=>{const d=document.createElement('div'),q=G[i];d.className='pv'+(q.rows>1?' sm':'')+(q.row===0?' r0':'');d.style.display='block';d.style.left=q.x*100+'%';d.style.width=q.w*100+'%';d.style.top=q.y*100+'%';d.style.height=q.h*100+'%';d.style.bottom='auto';
   d.innerHTML=`<div class="tl"><div class="pos"></div><div class="lap"></div></div><div class="tr"><div class="sc"></div><div class="nm" style="color:${hexc(k.i)}">${k.name}</div></div><div class="msg"></div>
-  <div class="bl"><div class="spd"><b>0</b><span>KM/H</span></div><div class="item"></div></div>`;
-  document.body.appendChild(d);k.hud={el:d,pos:d.querySelector('.pos'),lap:d.querySelector('.lap'),sc:d.querySelector('.sc'),msg:d.querySelector('.msg'),spd:d.querySelector('.spd b'),slots:d.querySelectorAll('.slot'),item:d.querySelector('.item')};emit('hudbuild',k,d)})}
+  <div class="fcard"></div><div class="bl"><div class="spd"><b>0</b><span>KM/H</span></div><div class="item"></div></div>`;
+  document.body.appendChild(d);k.hud={el:d,pos:d.querySelector('.pos'),lap:d.querySelector('.lap'),sc:d.querySelector('.sc'),msg:d.querySelector('.msg'),spd:d.querySelector('.spd b'),slots:d.querySelectorAll('.slot'),item:d.querySelector('.item'),fc:d.querySelector('.fcard')};emit('hudbuild',k,d)})}
 function hud(){const m=Math.floor(raceT/60),s=Math.floor(raceT%60);$('clock').textContent=m+':'+String(s).padStart(2,'0');
  humans.forEach(k=>{const h=k.hud;h.pos.innerHTML=placeOf(k)+'<small>º</small>';h.lap.textContent='VOLTA '+clamp(Math.floor(k.prog/N)+1,1,LAPS)+' / '+LAPS;h.sc.textContent=k.v>0?'':'';h.spd.textContent=Math.round(Math.abs(k.v)*2.1);
-  const it=k.item&&ITEMS[k.item];h.item.innerHTML=it?`<i>${it.ico}</i>${it.nm}`:'<i style="opacity:.25">?</i>ITEM';if(k.msgT>0){k.msgT-=1/60;if(k.msgT<=0)h.msg.classList.remove('on')}});
+  if(k.fin&&h.fc.style.display!=='block'){h.fc.textContent=k.place+'º Lugar';h.fc.style.display='block'}const it=k.item&&ITEMS[k.item];h.item.innerHTML=it?`<i>${it.ico}</i>${it.nm}`:'<i style="opacity:.25">?</i>ITEM';if(k.msgT>0){k.msgT-=1/60;if(k.msgT<=0)h.msg.classList.remove('on')}});
  minimap();emit('hud')}
 const mm=$('mini'),mg=mm.getContext('2d');
 const mmx=x=>20+(x-mmB.x0)/(mmB.x1-mmB.x0)*360,mmz=z=>20+(z-mmB.z0)/(mmB.z1-mmB.z0)*240;
@@ -2730,11 +2731,11 @@ function minimap(){mg.clearRect(0,0,400,280);mg.lineWidth=14;mg.strokeStyle=ST.m
  mg.fillStyle='#fff';mg.fillRect(mmx(SP[0].x)-3,mmz(SP[0].z)-9,6,18);
  karts.forEach(k=>{mg.fillStyle=hexc(k.i);mg.beginPath();mg.arc(mmx(k.x),mmz(k.z),k.human?11:7,0,7);mg.fill();mg.strokeStyle='#fff';mg.lineWidth=3;mg.stroke()})}
 /* ---------- fases no menu e campeonato ---------- */
-const CAMP=['gelo','fogo'],PTS=[15,12,10,8,7,6,5,4,3,2];
+const CAMP=['gelo','fogo','amazonia','placa'],PTS=[15,12,10,8,7,6,5,4,3,2];
 const CH={on:false,i:0,tot:{}};
-let SEL='gelo';try{const f=localStorage.getItem('mmt_kart_fase');if(f==='gelo'||f==='fogo'||f==='camp')SEL=f}catch(e){}
-const FASES=['gelo','fogo','camp'];
-function faseTxt(){return SEL==='camp'?'🏆 CAMPEONATO (❄️ GELO + 🔥 FOGO)':STAGES[SEL].ico+' '+STAGES[SEL].nome}
+let SEL='gelo';try{const f=localStorage.getItem('mmt_kart_fase');if(['gelo','fogo','amazonia','placa','camp'].includes(f))SEL=f}catch(e){}
+const FASES=['gelo','fogo','amazonia','placa','camp'];
+function faseTxt(){return SEL==='camp'?'🏆 CAMPEONATO (4 FASES)':STAGES[SEL].ico+' '+STAGES[SEL].nome}
 function setFase(f){SEL=f;try{localStorage.setItem('mmt_kart_fase',f)}catch(e){}document.querySelectorAll('#fases .mode').forEach(e=>e.classList.toggle('on',e.dataset.f===f));
  const lf=$('lfase');if(lf)lf.textContent='FASE: '+faseTxt()+' · ↑/↓ TROCA';if(state==='menu'||state==='lobby')selectStage(f==='camp'?'gelo':f);if(state==='lobby')pushLobby()}
 on('speed',k=>VEH[k.veh].spd);on('accel',k=>VEH[k.veh].acc);on('steer',k=>VEH[k.veh].str);
@@ -2775,7 +2776,7 @@ function update(dt){
  if(state==='go'){raceT+=dt;
   if(humans.every(k=>k.fin)||raceT>300){if(!update.fe)update.fe=1.8;}}
  if(update.fe){update.fe-=dt;if(update.fe<=0){update.fe=0;finish();return}}
- karts.forEach(k=>{let inp;if(k.human&&!k.fin&&!(k.ctrl==='phone'&&!(k.pl&&k.pl.conn&&k.pl.conn.open))){inp=humanInput(k);const press=inp.item&&!k.itemHeld;k.itemHeld=inp.item;if(press&&k.fallT<=0)useItem(k)}else{inp=botInput(k,dt);if(inp.item&&k.item&&state==='go'&&k.fallT<=0)useItem(k)}stepKart(k,inp,dt)});
+ karts.forEach(k=>{let inp;if(k.human&&!(k.ctrl==='phone'&&!(k.pl&&k.pl.conn&&k.pl.conn.open))){inp=humanInput(k);const press=inp.item&&!k.itemHeld;k.itemHeld=inp.item;if(press&&k.fallT<=0)useItem(k)}else{inp=botInput(k,dt);if(inp.item&&k.item&&state==='go'&&k.fallT<=0)useItem(k)}stepKart(k,inp,dt)});
  pickups.concat(ibs).forEach(p=>{if(p.cd>0){p.cd-=dt;p.m.visible=p.cd<=0}});obst=obst.filter(o=>{if(o.t>0){o.t-=dt;return true}scene.remove(o.m);return false});
  stepShots(dt);if(beamT>0){beamT-=dt;if(beamT<=0)beam.visible=false}
  emit('update',dt)}
@@ -3542,6 +3543,91 @@ on('hud',()=>humans.forEach(k=>{if(!k.pvx)return;k.pvx.c.textContent='🪙 '+(k.
 /* ===== EXTRA · SOM E EFEITOS (música, última volta, contramão, motor) ===== */
 
 /* ===== FIM · SOM E EFEITOS ===== */
+
+
+/* ===== EXTRA · MAPAS (Amazônia e Placa SMT) ===== */
+(()=>{const rnd=(a,b)=>a+Math.random()*(b-a);
+function distPista(x,z){let m=1e9;for(let i=0;i<N;i+=3){const d=(SP[i].x-x)**2+(SP[i].z-z)**2;if(d<m)m=d}return Math.sqrt(m)}
+function tex(w,h,fn,rep){const t=new THREE.CanvasTexture(cv(w,h,fn));t.wrapS=t.wrapT=THREE.RepeatWrapping;t.encoding=THREE.sRGBEncoding;if(rep)t.repeat.set(rep[0],rep[1]);return t}
+/* ---------------- AMAZÔNIA ---------------- */
+STAGES.amazonia={id:'amazonia',nome:'AMAZÔNIA',ico:'🌳',sub:'Floresta, chuva, troncos e a Ponte Rio Negro',
+ pts:[[-200,-20],[-170,80],[-90,112],[20,114],[110,108],[190,80],[220,0],[170,-70],[80,-60],[20,-110],[-80,-120],[-160,-90]],
+ sky:0x8FA39A,fogN:120,fogF:560,hemi:[0xDDEEDD,0x2E4A2A,.7],sun:[0xE8F0E0,.45],
+ road:['#4A4F4C','#F2B705','rgba(255,255,255,.75)'],bar:[0x2E7D32,0xF2F2F2],cone:0xFF7A00,mm:'#5C8A5A',
+ gaps:[{u:.37,len:16,ramp:13,h:2.6}],ice:[{u:.47,len:40,l0:-10,l1:6},{u:.76,len:45,l0:-4,l1:14},{u:.9,len:35,l0:-14,l1:2}],
+ boxes:[.06,.16,.31,.45,.53,.6,.7,.82,.95],pit:'agua',fallMsg:'💧 CAIU NO IGARAPÉ! ⏱ 2s',
+ slipTex:()=>tex(256,256,(g,w,h)=>{const gr=g.createLinearGradient(0,0,w,0);gr.addColorStop(0,'rgba(90,70,40,0)');gr.addColorStop(.15,'rgba(90,70,40,.75)');gr.addColorStop(.85,'rgba(90,70,40,.75)');gr.addColorStop(1,'rgba(90,70,40,0)');g.fillStyle=gr;g.fillRect(0,0,w,h);g.strokeStyle='rgba(200,220,230,.5)';for(let i=0;i<12;i++){g.beginPath();g.arc(30+Math.random()*196,Math.random()*h,4+Math.random()*12,0,7);g.stroke()}}),
+ pitMat:()=>new THREE.MeshStandardMaterial({map:tex(256,256,(g,w,h)=>{g.fillStyle='#1A1410';g.fillRect(0,0,w,h);for(let i=0;i<60;i++){g.fillStyle='rgba(120,90,60,'+Math.random()*.25+')';g.fillRect(Math.random()*w,Math.random()*h,30,2)}}),roughness:.1,metalness:.4}),
+ arches:[[.014,'LARGADA · AMAZÔNIA','#11A86B','Manaus · Amazonas'],[.45,'FLORESTA','#11A86B','Cuidado com os troncos!'],[.66,'ENCONTRO DAS ÁGUAS','#8A5A2B','Rio Negro + Solimões'],[.93,'ZONA FRANCA','#0A84FF','Polo Industrial de Manaus']]};
+const PONTE={u0:.215,u1:.295};
+STAGES.amazonia.build=function(d){
+ const ft=tex(256,256,(g,w,h)=>{g.fillStyle='#2F4A26';g.fillRect(0,0,w,h);for(let i=0;i<900;i++){g.fillStyle=['#3B5A2E','#26401F','#4A6B35','#3A3020'][i%4];g.fillRect(Math.random()*w,Math.random()*h,3+Math.random()*5,2+Math.random()*4)}},[80,60]);
+ const fl=new THREE.Mesh(new THREE.PlaneGeometry(1800,1400),new THREE.MeshStandardMaterial({map:ft,roughness:1}));fl.rotation.x=-Math.PI/2;world.add(fl);
+ /* rio em volta da pista com o encontro das águas (metade escura = Rio Negro, metade barrenta = Solimões) */
+ const cx=10,cz=-3,ax=330,az=225,rw=70,seg=160,pos=[],uv=[],idx=[];
+ for(let i=0;i<=seg;i++){const a=i/seg*Math.PI*2,c=Math.cos(a),sn=Math.sin(a);pos.push(cx+c*ax,.02,cz+sn*az,cx+c*(ax+rw),.02,cz+sn*(az+rw));uv.push(i/seg,0,i/seg,1);if(i<seg){const q=i*2;idx.push(q,q+1,q+2,q+1,q+3,q+2)}}
+ const rg=new THREE.BufferGeometry();rg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));rg.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));rg.setIndex(idx);rg.computeVertexNormals();
+ const rt=new THREE.CanvasTexture(cv(2048,64,(g,w,h)=>{for(let x=0;x<w;x++){const t=x/w;let m=t<.25||t>.75?0:1;const b=Math.abs(t-.25)<.03?(t-.22)/.06:Math.abs(t-.75)<.03?1-(t-.72)/.06:m;
+  for(let y=0;y<h;y+=4){const mix=clamp(b+Math.sin(y*.3+x*.05)*.25*(Math.abs(t-.25)<.03||Math.abs(t-.75)<.03?1:0),0,1);const r=Math.round(26+mix*(170-26)),gg=Math.round(18+mix*(120-18)),bb=Math.round(12+mix*(70-12));g.fillStyle=`rgb(${r},${gg},${bb})`;g.fillRect(x,y,1,4)}}}));
+ rt.encoding=THREE.sRGBEncoding;const river=new THREE.Mesh(rg,new THREE.MeshStandardMaterial({map:rt,roughness:.15,metalness:.35,side:THREE.DoubleSide}));world.add(river);
+ /* braço do rio que passa embaixo da ponte */
+ const um=(PONTE.u0+PONTE.u1)/2,pm=ptAt(um),dirx=RT[pm.i].x,dirz=RT[pm.i].z;const L=130,br=new THREE.Mesh(new THREE.PlaneGeometry(56,L*2),river.material);br.rotation.x=-Math.PI/2;br.rotation.z=-Math.atan2(dirx,dirz);
+ const bg=new THREE.Group();bg.position.set(pm.x,.021,pm.z);bg.rotation.y=Math.atan2(dirx,dirz);const bm=new THREE.Mesh(new THREE.PlaneGeometry(56,L*2),new THREE.MeshStandardMaterial({color:0x1E1712,roughness:.1,metalness:.4}));bm.rotation.x=-Math.PI/2;bg.add(bm);world.add(bg);
+ /* PONTE RIO NEGRO: tabuleiro, guarda-corpo, torre em arco e estais */
+ const i0=Math.round(PONTE.u0*N),i1=Math.round(PONTE.u1*N),hw=W/2;
+ world.add(ribbon(i0,i1,-hw-2,hw+2,.025,M(0xB8BDBF),8));
+ for(const sg of[-1,1]){world.add(ribbon(i0,i1,sg*(hw+1.2),sg*(hw+2),i=>1.6,M(0xE8ECEE),8));for(let i=i0;i<=i1;i+=4){const p=ptAt(i/N,sg*(hw+1.6));const c=B(.4,1.6,.4,0xE8ECEE);c.position.set(p.x,.8,p.z);world.add(c)}}
+ const tw=new THREE.Group();tw.position.set(pm.x,0,pm.z);tw.rotation.y=pm.h;const tm2=M(0xF2F4F5);
+ for(let a=0;a<=20;a++){const t=a/20,ang=Math.PI*t,x=Math.cos(ang)*(hw+5),y=Math.sin(ang)*48,b=B(2.2,4,2.2,0xF2F4F5);b.position.set(x,y,0);b.rotation.z=ang-Math.PI/2;tw.add(b)}
+ const cm=new THREE.LineBasicMaterial({color:0xDDE3E6}),cp=[];for(const s of[-1,1])for(let k=1;k<=9;k++){const z=s*k*((i1-i0)*SEG/2)/9;for(const sd of[-1,1]){cp.push(sd*(hw+1.5),2,z, sd*6,44,0)}}
+ const cg=new THREE.BufferGeometry();cg.setAttribute('position',new THREE.Float32BufferAttribute(cp,3));tw.add(new THREE.LineSegments(cg,cm));world.add(tw);
+ const pl=new THREE.Mesh(new THREE.PlaneGeometry(W+6,3.4),new THREE.MeshBasicMaterial({map:labelTex('PONTE RIO NEGRO','#0A84FF','Manaus · Iranduba'),fog:false,side:THREE.DoubleSide}));pl.position.set(0,52,0);tw.add(pl);
+ /* árvores (muitas) */
+ const T=900,tg=new THREE.CylinderGeometry(.6,.9,6,6),cg2=new THREE.IcosahedronGeometry(4.5,0),it=new THREE.InstancedMesh(tg,M(0x5A3E26),T),ic=new THREE.InstancedMesh(cg2,new THREE.MeshStandardMaterial({roughness:1,flatShading:true}),T),o=new THREE.Object3D(),col=new THREE.Color();let n=0;
+ for(let t=0;t<6000&&n<T;t++){const x=rnd(-420,440),z=rnd(-320,310),e=((x-cx)/ax)**2+((z-cz)/az)**2,e2=((x-cx)/(ax+rw))**2+((z-cz)/(az+rw))**2;if(e>.93&&e2<1.07)continue;if(distPista(x,z)<W/2+9)continue;
+  const lx=(x-pm.x)*Math.cos(bg.rotation.y)-(z-pm.z)*Math.sin(bg.rotation.y);const lz=(x-pm.x)*Math.sin(bg.rotation.y)+(z-pm.z)*Math.cos(bg.rotation.y);if(Math.abs(lx)<32&&Math.abs(lz)<L+5)continue;
+  const s=rnd(.8,1.8);o.position.set(x,3*s,z);o.rotation.set(0,rnd(0,6),0);o.scale.set(s,s,s);o.updateMatrix();it.setMatrixAt(n,o.matrix);o.position.y=6*s+3*s;o.scale.set(s*rnd(.9,1.3),s*rnd(1,1.6),s*rnd(.9,1.3));o.updateMatrix();ic.setMatrixAt(n,o.matrix);ic.setColorAt(n,col.setHSL(rnd(.24,.36),rnd(.45,.7),rnd(.18,.32)));n++}
+ it.count=ic.count=n;world.add(it,ic);
+ /* troncos na pista */
+ d.logs=[];[.11,.53,.63,.84].forEach((u,j)=>{if(nearGap(u,15))return;const lat0=[-12,2,-4,6][j],p=ptAt(u,lat0+5),m=new THREE.Mesh(new THREE.CylinderGeometry(1,1,10,10),M(0x6B4A2E));m.rotation.set(0,p.h,Math.PI/2,'YXZ');m.rotation.order='YZX';
+  const g=new THREE.Group();g.position.set(p.x,1,p.z);g.rotation.y=p.h;const c=new THREE.Mesh(new THREE.CylinderGeometry(1,1,10,10),M(0x6B4A2E));c.rotation.z=Math.PI/2;g.add(c);world.add(g);d.logs.push({x:p.x,z:p.z,rx:RT[p.i].x,rz:RT[p.i].z})});
+ /* chuva */
+ const R=3500,rp=new Float32Array(R*3);for(let i=0;i<R;i++){rp[i*3]=rnd(-260,280);rp[i*3+1]=rnd(0,60);rp[i*3+2]=rnd(-170,170)}const rgm=new THREE.BufferGeometry();rgm.setAttribute('position',new THREE.BufferAttribute(rp,3));
+ d.rain=new THREE.Points(rgm,new THREE.PointsMaterial({color:0xC8D8E0,size:.35,transparent:true,opacity:.7,depthWrite:false}));d.rain.frustumCulled=false;world.add(d.rain)};
+const logCd=new WeakMap();
+on('kart',(k,inp,dt)=>{if(ST.id!=='amazonia'||k.air||k.fallT>0)return;const t=logCd.get(k)||0;if(t>raceT)return;for(const l of ST.logs){const dx=k.x-l.x,dz=k.z-l.z,along=dx*l.rx+dz*l.rz,perp=Math.abs(dx*l.rz-dz*l.rx);if(Math.abs(along)<5.5&&perp<2.2){logCd.set(k,raceT+1.2);hitKart(k,{spin:.8,vmul:.4,msg:'🪵 BATEU NO TRONCO!',kind:'tronco'});break}}});
+on('visuals',dt=>{if(ST.id!=='amazonia'||!ST.rain)return;const a=ST.rain.geometry.attributes.position.array;for(let i=1;i<a.length;i+=3){a[i]-=dt*70;if(a[i]<0)a[i]+=60}ST.rain.geometry.attributes.position.needsUpdate=true});
+/* ---------------- PLACA SMT (placa limpa) ---------------- */
+const pcbTex=(rep)=>tex(512,512,(g,w,h)=>{g.fillStyle='#14653F';g.fillRect(0,0,w,h);g.strokeStyle='rgba(200,140,60,.55)';g.lineWidth=6;g.lineCap='round';
+ for(let i=0;i<14;i++){let x=Math.random()*w,y=Math.random()*h;g.beginPath();g.moveTo(x,y);for(let s=0;s<4;s++){const dir=Math.floor(Math.random()*8)*Math.PI/4,l=30+Math.random()*90;x+=Math.cos(dir)*l;y+=Math.sin(dir)*l;g.lineTo(x,y)}g.stroke();g.fillStyle='#D9A441';g.beginPath();g.arc(x,y,7,0,7);g.fill();g.fillStyle='#0B3D25';g.beginPath();g.arc(x,y,3,0,7);g.fill()}
+ g.fillStyle='rgba(220,220,210,.85)';for(let i=0;i<10;i++){const x=Math.random()*w,y=Math.random()*h;g.fillRect(x,y,18,10);g.fillRect(x+26,y,18,10)}
+ g.fillStyle='rgba(255,255,255,.8)';g.font='700 20px Arial';['R12','C5','U3','TP1','J2','L4','Q7','D9'].forEach(t=>g.fillText(t,Math.random()*w,Math.random()*h))},rep);
+STAGES.placa={id:'placa',nome:'PLACA SMT',ico:'💻',sub:'Placa de circuito impresso limpa: a trilha de cobre é a estrada',
+ pts:[[-210,-50],[-210,40],[-160,100],[-50,105],[0,60],[80,60],[125,105],[205,105],[240,45],[240,-50],[190,-105],[60,-105],[15,-60],[-60,-60],[-105,-110],[-175,-110]],
+ sky:0x0C1A22,fogN:220,fogF:820,hemi:[0xEAF6FF,0x0E3A28,.75],sun:[0xFFFFFF,.6],
+ road:['#C26F2E','#F4F4EE','rgba(255,240,200,.55)'],bar:[0xF4F4EE,0x0E4D30],cone:0xD9A441,mm:'#C26F2E',
+ gaps:[{u:.68,len:16,ramp:13,h:2.6}],ice:[{u:.27,len:40,l0:-12,l1:4}],boxes:[.06,.15,.3,.42,.52,.6,.77,.86,.94],pit:'vao',fallMsg:'⚡ CAIU NO V-CUT! ⏱ 2s',
+ slipTex:()=>tex(256,256,(g,w,h)=>{const gr=g.createLinearGradient(0,0,w,0);gr.addColorStop(0,'rgba(210,215,220,0)');gr.addColorStop(.12,'rgba(210,215,220,.85)');gr.addColorStop(.88,'rgba(210,215,220,.85)');gr.addColorStop(1,'rgba(210,215,220,0)');g.fillStyle=gr;g.fillRect(0,0,w,h);g.fillStyle='rgba(255,255,255,.7)';for(let i=0;i<30;i++)g.fillRect(30+Math.random()*196,Math.random()*h,3,3)}),
+ pitMat:()=>new THREE.MeshBasicMaterial({map:tex(128,128,(g,w,h)=>{g.fillStyle='#02080A';g.fillRect(0,0,w,h);g.strokeStyle='rgba(40,255,140,.35)';g.lineWidth=2;for(let y=0;y<h;y+=16){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke()}})}),
+ arches:[[.014,'LARGADA · PLACA LIMPA','#1E7F4F','Placa de circuito impresso'],[.25,'TRILHA DE COBRE','#C26F2E','35 µm de cobre'],[.5,'FIDUCIAL','#1E7F4F','Alinhamento da placa'],[.655,'V-CUT','#D9313F','Pule a fenda!'],[.9,'INSPEÇÃO AOI','#0A84FF','Placa aprovada']]};
+STAGES.placa.build=function(d){
+ const fl=new THREE.Mesh(new THREE.PlaneGeometry(1400,1000),new THREE.MeshStandardMaterial({map:pcbTex([14,10]),roughness:.55,metalness:.1}));fl.rotation.x=-Math.PI/2;world.add(fl);
+ /* borda da placa (FR4) e furos de fixação */
+ [[0,-500,1400,6],[0,500,1400,6],[-700,0,6,1000],[700,0,6,1000]].forEach(a=>{const m=B(a[2],8,a[3],0xD8C9A0);m.position.set(a[0],4,a[1]);world.add(m)});
+ [[-300,-200],[320,-200],[-300,210],[320,210]].forEach(a=>{const r=new THREE.Mesh(new THREE.RingGeometry(9,15,32),M(0xD9A441));r.rotation.x=-Math.PI/2;r.position.set(a[0],.05,a[1]);world.add(r);const h=new THREE.Mesh(new THREE.CircleGeometry(9,32),new THREE.MeshBasicMaterial({color:0x050505}));h.rotation.x=-Math.PI/2;h.position.set(a[0],.06,a[1]);world.add(h)});
+ /* fiduciais e pads vazios (placa limpa = sem componentes) */
+ for(let t=0,n=0;t<400&&n<70;t++){const x=rnd(-320,330),z=rnd(-220,220);if(distPista(x,z)<W/2+6)continue;const big=Math.random()<.3,m=new THREE.Mesh(new THREE.BoxGeometry(big?10:4,.15,big?10:2.5),new THREE.MeshStandardMaterial({color:0xD5D9DC,metalness:.8,roughness:.25}));m.position.set(x,.08,z);m.rotation.y=Math.floor(Math.random()*4)*Math.PI/4;world.add(m);n++}
+ for(let k=0;k<6;k++){const p=ptAt(k/6+.08,(k%2?1:-1)*(W/2+14));const r=new THREE.Mesh(new THREE.RingGeometry(2,4,24),M(0xD9A441));r.rotation.x=-Math.PI/2;r.position.set(p.x,.07,p.z);world.add(r)}
+ /* algumas placas em pé e pilhas de placas limpas em volta */
+ const pt=pcbTex([1,1]);for(let k=0;k<10;k++){const u=k/10+.05;if(nearGap(u,15))continue;const s=k%2?1:-1,p=ptAt(u,s*(W/2+30)),g=new THREE.Group();g.position.set(p.x,0,p.z);g.rotation.y=p.h+Math.PI/2;
+  const b=new THREE.Mesh(new THREE.BoxGeometry(22,14,.8),[M(0xD8C9A0),M(0xD8C9A0),M(0xD8C9A0),M(0xD8C9A0),new THREE.MeshStandardMaterial({map:pt,roughness:.5}),new THREE.MeshStandardMaterial({map:pt,roughness:.5})]);b.position.y=8.5;g.add(b);
+  const gf=B(22,1.6,.9,0xE8B84A);gf.position.y=1;g.add(gf);world.add(g)}
+ for(let k=0;k<8;k++){const u=k/8+.11;if(nearGap(u,15))continue;const s=k%2?-1:1,p=ptAt(u,s*(W/2+22));for(let y=0;y<6;y++){const b=new THREE.Mesh(new THREE.BoxGeometry(12,.5,8),[M(0xD8C9A0),M(0xD8C9A0),new THREE.MeshStandardMaterial({map:pt}),M(0x14653F),M(0xD8C9A0),M(0xD8C9A0)]);b.position.set(p.x,.25+y*.55,p.z);b.rotation.y=p.h+y*.08;world.add(b)}}
+ /* silk gigante no chão */
+ const sk=new THREE.Mesh(new THREE.PlaneGeometry(160,40),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv(1024,256,(g,w,h)=>{g.strokeStyle='#fff';g.lineWidth=8;g.strokeRect(8,8,w-16,h-16);g.fillStyle='#fff';g.font='900 120px Arial';g.textAlign='center';g.textBaseline='middle';g.fillText('TPV · MMT · REV A',w/2,h/2)})),transparent:true}));
+ sk.rotation.x=-Math.PI/2;sk.position.set(10,.06,0);world.add(sk)};
+})();
+/* ===== FIM · MAPAS ===== */
 
 
 setFase(SEL);selectStage(SEL==='camp'?'gelo':SEL);
