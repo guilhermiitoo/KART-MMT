@@ -2641,7 +2641,10 @@ const beam=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Ve
 /* ---------- entrada ---------- */
 const keys={};let CFG={dz:.35,stick:true,cx:0,cy:0};try{Object.assign(CFG,JSON.parse(localStorage.getItem('mmt_kart_cfg')||'{}'))}catch(e){}
 const saveCfg=()=>{try{localStorage.setItem('mmt_kart_cfg',JSON.stringify(CFG))}catch(e){}};
-let actx=null;function sfx(f,d,tp,v){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.type=tp||'sine';o.frequency.value=f;g.gain.value=v||.08;g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d)}catch(e){}}
+/* saída única do som: volume dos efeitos ×SFX_VOL, limitador (não estoura) e mudo (tecla M) */
+const SFX_VOL=2.6;
+function sfxOut(){if(!sfxOut.g){const c=actx.createDynamicsCompressor();c.threshold.value=-10;c.ratio.value=8;c.connect(actx.destination);sfxOut.g=actx.createGain();let m=false;try{m=localStorage.getItem('mmt_kart_mudo')==='1'}catch(e){}sfxOut.g.gain.value=m?0:1;sfxOut.g.connect(c)}return sfxOut.g}
+let actx=null;function sfx(f,d,tp,v){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.type=tp||'sine';o.frequency.value=f;g.gain.value=Math.min(.6,(v||.08)*SFX_VOL);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g);g.connect(sfxOut());o.start();o.stop(actx.currentTime+d)}catch(e){}}
 const pads=()=>navigator.getGamepads?[...navigator.getGamepads()].filter(Boolean):[];
 function padRead(p){let ax=p.axes[0]-CFG.cx;if(!CFG.stick)ax=0;if(Math.abs(ax)<CFG.dz)ax=0;else ax=(ax-Math.sign(ax)*CFG.dz)/(1-CFG.dz);if(p.buttons[14]&&p.buttons[14].pressed)ax=-1;if(p.buttons[15]&&p.buttons[15].pressed)ax=1;
  const b=i=>p.buttons[i]?p.buttons[i].value||(p.buttons[i].pressed?1:0):0;return{st:ax,thr:Math.max(b(7),b(0))-Math.max(b(6),b(1)),item:b(2)>.5||b(3)>.5,drift:b(5)>.5||b(4)>.5}}
@@ -3664,8 +3667,8 @@ const _draw=draw;draw=function(){if(!POD.on||state!=='end')return _draw();const 
 let mudo=false;try{mudo=localStorage.getItem('mmt_kart_mudo')==='1'}catch(e){}
 const S={m:null,mus:null,eng:null,ef:null,next:0,step:0,tick:null,last:false};
 function ctx(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();return actx}catch(e){return null}}
-function bus(){const a=ctx();if(!a)return null;if(!S.m){S.m=a.createGain();S.m.gain.value=mudo?0:1;S.m.connect(a.destination);S.mus=a.createGain();S.mus.gain.value=.05;S.mus.connect(S.m)}return a}
-addEventListener('keydown',e=>{bus();if(e.code==='KeyM'){mudo=!mudo;try{localStorage.setItem('mmt_kart_mudo',mudo?'1':'0')}catch(_){}if(S.m)S.m.gain.value=mudo?0:1;banner(mudo?'🔇 SOM DESLIGADO':'🔊 SOM LIGADO',1)}});
+function bus(){const a=ctx();if(!a)return null;if(!S.m){S.m=a.createGain();S.m.gain.value=1;S.m.connect(sfxOut());S.mus=a.createGain();S.mus.gain.value=.09;S.mus.connect(S.m)}return a}
+addEventListener('keydown',e=>{bus();if(e.code==='KeyM'){mudo=!mudo;try{localStorage.setItem('mmt_kart_mudo',mudo?'1':'0')}catch(_){}if(actx)sfxOut().gain.value=mudo?0:1;banner(mudo?'🔇 SOM DESLIGADO':'🔊 SOM LIGADO',1)}});
 addEventListener('pointerdown',()=>bus());
 /* música por mapa: [bpm, onda do baixo, onda da melodia, escala (semitons), padrão do baixo, padrão da melodia] */
 const MUS={gelo:[128,'triangle','sine',[0,2,4,7,9,12,14,16],[0,0,7,0,5,5,4,4],[4,7,9,7,12,9,7,4, 2,4,7,4,9,7,4,2]],
@@ -3698,7 +3701,7 @@ on('kart',(k,inp,dt)=>{if(state!=='go'||!k.human||k.fin)return;
  if(Math.cos(wrap(kh-Math.atan2(t.x,t.z)))<-.2){k.wrT+=dt;if(k.wrT>1&&raceT>k.wrM){k.wrM=raceT+1.6;say(k,'⛔ CONTRAMÃO! VIRE O KART','#D9313F');sfx(180,.25,'square',.08)}}else k.wrT=0});
 on('update',dt=>{if(bnT>0){bnT-=dt;if(bnT<=0)bn.classList.remove('on')}
  if(S.eng&&actx){const hs=humans.filter(k=>!k.fin);const v=hs.length?hs.reduce((a,k)=>a+Math.abs(k.v),0)/hs.length:0,on_=state==='go'||state==='count';
-  S.eng.o.frequency.setTargetAtTime(38+v*1.6,actx.currentTime,.08);S.eng.g.gain.setTargetAtTime(on_&&hs.length?.035+Math.min(v,80)*.0006:0,actx.currentTime,.1)}});
+  S.eng.o.frequency.setTargetAtTime(38+v*1.6,actx.currentTime,.08);S.eng.g.gain.setTargetAtTime(on_&&hs.length?.09+Math.min(v,80)*.0016:0,actx.currentTime,.1)}});
 on('visuals',dt=>{if(state!=='go'&&state!=='count'&&state!=='end'&&(S.tick||S.eng)){musStop();engStop()}if(state==='menu'||state==='lobby'){if(bnT>0&&bn.textContent.indexOf('SOM')<0){bnT=0;bn.classList.remove('on')}if(bnT>0){bnT-=dt;if(bnT<=0)bn.classList.remove('on')}}});
 })();
 
@@ -3744,9 +3747,9 @@ on('visuals',dt=>karts.forEach(k=>{if(k.trick){k.trA=Math.min(k.trA+dt*12,Math.P
   /* quanto a pista vira logo à frente: reta = 0 (sem ajuda), curva fechada = ajuda cheia */
   const t0=TG[k.idx],t1=TG[(k.idx+Math.max(4,Math.round(30/SEG)))%N],cu=Math.abs(wrap(Math.atan2(t1.x,t1.z)-Math.atan2(t0.x,t0.z))),f=clamp((cu-.12)/.25,0,1);if(!f)return;
   /* na curva o kart vira sozinho; se o jogador também vira, a ajuda diminui (ele manda) */
-  const st=Math.abs(inp.st||0),a=(st>.5?1.2:3.2)*f;
+  const st=Math.abs(inp.st||0),a=(st>.5?.9:2.3)*f;
   k.h+=d*(1-Math.exp(-a*dt));
-  if(!inp.drift)k.mh+=wrap(k.h-k.mh)*(1-Math.exp(-3*f*dt)) /* tração: menos escorregão na curva */});
+  if(!inp.drift)k.mh+=wrap(k.h-k.mh)*(1-Math.exp(-2.2*f*dt)) /* tração: menos escorregão na curva */});
 })();
 
 
