@@ -2835,7 +2835,7 @@ const pb={};function padMenu(){const ps=pads(),p=ps[0];const el=$('padinfo');if(
  else if(state==='end'){if(edge(0)||edge(9))backFromEnd()}
  else if(state==='lobby'){if(edge(0)||edge(9))lobbyStart(true);if(edge(12))cycleFase(-1);if(edge(13))cycleFase(1);if(edge(8))cycleModo(1);if(edge(1)){state='menu';$('sLobby').classList.remove('on');$('sMenu').classList.add('on')}}}
 /* ---------- ONLINE (TV = anfitrião) ---------- */
-const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},
+const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:['turn:eu-0.turn.peerjs.com:3478','turn:us-0.turn.peerjs.com:3478'],username:'peerjs',credential:'peerjsp'},
  {urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},{urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},{urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'}]};
 const online={peer:null,id:null,players:[],autoT:0,stT:0};
 function tx(p,m){try{p&&p.conn&&p.conn.open&&p.conn.send(m)}catch(e){}}
@@ -3705,11 +3705,13 @@ requestAnimationFrame(loop);
 (function(){const room=new URLSearchParams(location.search).get('join');if(!room)return;
 document.querySelector('meta[name=viewport]').setAttribute('content','width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no');document.title='Kart do Kit · Controle';
 const COLS=['#0A84FF','#F28C00','#11A86B','#D9313F','#8E5BE8','#E0B000'],CN=['AZUL','LARANJA','VERDE','VERMELHO','ROXO','AMARELO'];
-const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},{urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},{urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'}]};
+const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:['turn:eu-0.turn.peerjs.com:3478','turn:us-0.turn.peerjs.com:3478'],username:'peerjs',credential:'peerjsp'},{urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},{urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},{urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'}]};
 const css=document.createElement('style');css.textContent=`
 [hidden]{display:none!important}
-html,body{height:100%;overflow:hidden;background:#fff;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.ph{position:fixed;inset:0;overflow:auto;padding:18px 16px;touch-action:pan-y}
+html,body{height:100%;overflow:hidden;background:#fff;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+body.racing{touch-action:none}
+.ph{position:fixed;top:0;right:0;bottom:0;left:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 16px calc(18px + env(safe-area-inset-bottom));touch-action:manipulation}
+.ch,.big,#auto{cursor:pointer}#pn{-webkit-user-select:text;user-select:text}
 .hd{border-bottom:3px solid #0A84FF;padding-bottom:10px;margin-bottom:16px}.hd b{display:block;font-size:22px;letter-spacing:.05em;color:#1F4E5F}.hd span{font-size:13px;color:#5f7a85;font-weight:700}
 .lb{display:block;font-size:12px;font-weight:900;letter-spacing:.14em;color:#8A5A2B;margin:14px 0 6px}
 #pn{width:100%;font-size:20px;font-weight:800;padding:12px;border:2px solid #D6DEE2;border-radius:10px;color:#1F4E5F;text-transform:uppercase;font-family:inherit}
@@ -3722,7 +3724,7 @@ html,body{height:100%;overflow:hidden;background:#fff;touch-action:none;-webkit-
 .big.on{background:#11A86B}.big.off{background:#9fb2bb}
 .list{margin-top:16px;font-size:14px;font-weight:800;color:#1F4E5F}.list div{padding:8px 10px;border-bottom:1px solid #D6DEE2;display:flex;gap:8px;align-items:center}.list em{margin-left:auto;font-style:normal;font-size:11px;color:#5f7a85}.list .r em{color:#11A86B}
 .dt{width:14px;height:14px;border-radius:50%;display:inline-block}
-.pad{position:fixed;inset:0;background:#EEF4F6;touch-action:none}
+.pad{position:fixed;top:0;right:0;bottom:0;left:0;background:#EEF4F6;touch-action:none}
 .info{position:absolute;left:0;right:0;top:0;height:16%;display:flex;align-items:center;justify-content:center;gap:4vw;background:#fff;border-bottom:3px solid #0A84FF;font-weight:900;color:#1F4E5F;font-size:4vmin}
 .info b{font-size:8vmin}#imsg{color:#0A84FF;font-size:3.4vmin;max-width:40vw}
 .b{position:absolute;display:flex;align-items:center;justify-content:center;border-radius:4vmin;font-weight:900;color:#fff;font-size:5vmin;letter-spacing:.06em;box-shadow:0 1vmin 0 rgba(31,78,95,.35);transition:transform .05s}
@@ -3738,8 +3740,8 @@ body .dir{bottom:17%}
 .info{gap:3vw}#imsg{max-width:30vw}}
 #auto{position:absolute;right:2%;top:3%;z-index:2;background:#11A86B;color:#fff;font-weight:900;font-size:2.6vmin;padding:1.2vmin 2vmin;border-radius:2vmin}
 #auto.off{background:#9fb2bb}
-#rot{display:none;position:fixed;inset:0;background:rgba(255,255,255,.96);z-index:9;align-items:center;justify-content:center;flex-direction:column;font-weight:900;color:#1F4E5F;font-size:22px;text-align:center;padding:20px}
-.endb{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;color:#1F4E5F}
+#rot{display:none;position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(255,255,255,.96);z-index:9;align-items:center;justify-content:center;flex-direction:column;font-weight:900;color:#1F4E5F;font-size:22px;text-align:center;padding:20px}
+.endb{position:fixed;top:0;right:0;bottom:0;left:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;color:#1F4E5F}
 .endb h1{font-size:64px}.endb p{font-weight:800;color:#5f7a85}`;document.head.appendChild(css);
 document.body.innerHTML=`<div id="pj" class="ph"><div class="hd"><b>KART DO KIT · MMT</b><span id="pst">Conectando à sala ${room}…</span></div>
 <label class="lb">01 · SEU NOME</label><input id="pn" maxlength="12" placeholder="DIGITE SEU NOME" autocomplete="off">
@@ -3757,7 +3759,8 @@ const VSV={"kart": "<svg viewBox=\"0 0 64 40\" width=\"58\"><rect x=\"10\" y=\"1
 let conn=null,me={name:'',ci:-1,ready:false,veh:'kart'},list=[],auto=true;try{me.name=localStorage.getItem('mmt_kart_nm')||'';me.veh=localStorage.getItem('mmt_kart_vh')||'kart'}catch(e){}$('pn').value=me.name;
 const send=m=>{m.cid=cid;try{conn&&conn.open&&conn.send(m)}catch(e){}};
 const status=t=>$('pst').textContent=t;
-function show(w){$('pj').hidden=w!=='j';$('pp').hidden=w!=='p';$('pe').hidden=w!=='e';document.body.classList.toggle('racing',w==='p')}
+let wl=null;function wake(){try{if(navigator.wakeLock&&!wl&&document.visibilityState==='visible')navigator.wakeLock.request('screen').then(l=>{wl=l;l.addEventListener('release',()=>wl=null)}).catch(()=>{})}catch(e){}}
+function show(w){$('pj').hidden=w!=='j';$('pp').hidden=w!=='p';$('pe').hidden=w!=='e';document.body.classList.toggle('racing',w==='p');if(w==='p'){try{document.activeElement&&document.activeElement.blur()}catch(e){}window.scrollTo(0,0);wake()}}
 function renderVeh(){$('pv').innerHTML=VH.map(v=>`<div class="ch${me.veh===v[0]?' sel':''}" data-v="${v[0]}"><b>${v[1]}</b>${v[2]}<small>${v[3]}</small></div>`).join('')}
 function renderChars(){renderVeh();const tk=list.filter(o=>!o.me).map(o=>o.ci);$('pc').innerHTML=COLS.map((c,i)=>`<div class="ch${me.ci===i?' sel':''}${tk.includes(i)?' tk':''}" data-c="${i}"><i style="background:${c}"></i>${CN[i]}</div>`).join('');
  $('pl').innerHTML=list.length?'<label class="lb">NA SALA</label>'+list.map(o=>`<div class="${o.ready?'r':''}"><span class="dt" style="background:${o.ci>=0?COLS[o.ci]:'#D6DEE2'}"></span>${o.name||'(sem nome)'}${o.me?' (você)':''}<em>${o.ready?'✔ PRONTO':'escolhendo'}</em></div>`).join(''):'';
@@ -3775,10 +3778,13 @@ function onData(d){if(!d||!d.t)return;
  else if(d.t==='end'){$('ep').textContent=d.place+'º LUGAR';$('ew').textContent='Vencedor: '+d.win;$('enx').textContent=d.next?d.next+' · aguarde a TV':'Aguarde a próxima corrida na TV';show('e')}
  else if(d.t==='lobbyback'){me.ready=false;show('j');renderChars()}
  else if(d.t==='full')status('Sala cheia (6 jogadores). Aguarde a próxima.')}
-function connect(){const PC=window.FakePeer||window.Peer;if(!PC){status('Biblioteca online não carregou');return}
- const peer=new PC(undefined,{config:ICE});let done=false;const retry=()=>{if(done)return;done=true;try{peer.destroy()}catch(e){}setTimeout(connect,2000)};
- peer.on('open',()=>{conn=peer.connect('mmtkart-'+room,{reliable:true});
-  conn.on('open',()=>{status('Conectado ✔ · Sala '+room);send({t:'hello'});if(me.name||me.ci>=0)send({t:'profile',name:me.name,ci:me.ci,veh:me.veh})});
+/* iPhone: a conexão pode travar sem dar erro, ou cair quando a tela apaga — por isso tem prazo e reconecta ao voltar */
+let again=null;
+function connect(){const PC=window.FakePeer||window.Peer;if(!PC){status('Biblioteca online não carregou — recarregue a página');return}
+ const peer=new PC(undefined,{config:ICE});let done=false;const to=setTimeout(()=>{if(!(conn&&conn.open)){status('Demorou para conectar — tentando de novo…');retry()}},15000);
+ const retry=(ms)=>{if(done)return false;done=true;clearTimeout(to);try{peer.destroy()}catch(e){}again=setTimeout(connect,ms===0?0:2000);return true};connect.retry=retry;
+ peer.on('open',()=>{conn=peer.connect('mmtkart-'+room,{reliable:true,serialization:'json'});
+  conn.on('open',()=>{clearTimeout(to);status('Conectado ✔ · Sala '+room);send({t:'hello'});if(me.name||me.ci>=0)send({t:'profile',name:me.name,ci:me.ci,veh:me.veh})});
   conn.on('data',onData);conn.on('close',()=>{status('Conexão perdida — reconectando…');retry()});conn.on('error',()=>retry())});
  peer.on('error',e=>{status('Sem conexão com a TV ('+(e&&e.type)+') — tentando de novo…');retry()})}
 /* controle por toque */
@@ -3791,6 +3797,8 @@ pad.addEventListener('mousedown',e=>scan([e]));addEventListener('mouseup',()=>sc
 const au=$('auto');const tog=e=>{e.preventDefault();e.stopPropagation();auto=!auto;au.textContent='ACELERAR AUTOMÁTICO '+(auto?'✔':'✖');au.classList.toggle('off',!auto);push()};
 au.addEventListener('touchstart',tog,{passive:false});au.addEventListener('mousedown',tog);
 setInterval(()=>{if(!$('pp').hidden)push()},100);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;wake();if(!(conn&&conn.open)&&connect.retry){clearTimeout(again);status('Reconectando…');if(!connect.retry(0))connect()}});
+addEventListener('pageshow',e=>{if(e.persisted&&!(conn&&conn.open)&&connect.retry){clearTimeout(again);if(!connect.retry(0))connect()}});
 renderChars();connect();})();
 </script>
 </body></html>
