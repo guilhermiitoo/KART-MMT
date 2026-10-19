@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Kart do Kit · MMT</title>
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Kart do MMT</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -94,18 +94,11 @@ window.MQ=function(url,onMsg,onState){const te=new TextEncoder(),td=new TextDeco
 <div id="div"></div><canvas id="mini" width="400" height="280"></canvas><div id="big"></div>
 <div class="sig">Guilherme Fernandes · MMT</div>
 <div id="sMenu" class="scr on"><div class="card">
-<span class="tag">01 · CORRIDA PELA PRODUÇÃO</span><h1>KART DO KIT</h1><h2>CORRIDA PELA PRODUÇÃO · PEGUE OS ITENS · CHEGUE EM PRIMEIRO</h2>
+<span class="tag">01 · CORRIDA PELA PRODUÇÃO</span><h1>KART DO MMT</h1><h2>CORRIDA PELA PRODUÇÃO · PEGUE OS ITENS · CHEGUE EM PRIMEIRO</h2>
 <div class="modes"><div class="mode" id="m1">1 JOGADOR<small>contra 3 robôs</small></div><div class="mode on" id="m2">2 JOGADORES<small>TELA DIVIDIDA · +2 robôs</small></div><div class="mode" id="m3">📱 ONLINE<small>ATÉ 6 CELULARES</small></div></div>
 <div id="modos" class="modes"></div><div id="fases" class="modes"></div>
 <div id="veics" class="modes"><div class="mode" id="vp1"></div><div class="mode" id="vp2"></div></div>
-<div class="how">
-<div><b>MAPAS</b> · ❄️ Gelo escorrega · 🔥 Fogo tem lava e bolas de fogo · 🌳 Amazônia tem chuva e a Ponte Rio Negro · 💻 Placa SMT tem V-cut. Caiu num buraco? 2 s de castigo!</div>
-<div><b>CAIXAS "?"</b> · ⚡ TURBO · 📦 CAIXA · 🎯 COMPONENTE · 🛡️ ESCUDO · 🛢️ ÓLEO · ⭐ ESTRELA · 🌩️ RAIO. Quem está atrás ganha itens mais fortes!</div>
-<div><b>P1</b> · WASD · Espaço = item · Shift = drift</div>
-<div><b>P2</b> · Controle (analógico ou setas) · X = item · RB = drift (setas do teclado também)</div>
-<div><b>TRUQUES</b> · 🚀 acelere no último segundo da contagem = largada turbo (cedo demais afoga) · ✨ DRIFT no ar = manobra · 💨 cole atrás de alguém = vácuo · M = som · T = assistência de direção</div></div>
-<div class="go">ENTER / A PARA LARGAR · ←/→ JOGADORES · Q/E MODO · ↑/↓ MAPA</div>
-<div id="padinfo"></div></div></div>
+<div id="padinfo" hidden></div></div></div>
 <div id="sLobby" class="scr"><div class="card" style="width:min(1100px,94vw)">
 <div class="mmt"><b>KART DO MMT</b><span>JOGO OFICIAL DO MMT · MANAUS</span></div><span class="tag">03 · MODO ONLINE</span><h1>ENTRE PELO CELULAR</h1><h2>ESCANEIE O QR CODE · DIGITE SEU NOME · ESCOLHA O PILOTO · PRONTO</h2>
 <div class="lrow"><div class="qrbox"><div id="qr">Gerando sala…</div><div id="qroom"></div><div id="qurl"></div><div id="qnet"></div></div><div id="slots" class="slots6"></div></div>
@@ -3737,22 +3730,23 @@ on('visuals',dt=>karts.forEach(k=>{if(k.trick){k.trA=Math.min(k.trA+dt*12,Math.P
 /* ===== FIM · CORRIDA+ ===== */
 
 /* ===== ASSISTÊNCIA DE DIREÇÃO E TRAÇÃO (para quem nunca jogou) =====
-   Leve e SÓ NAS CURVAS: só para pilotos humanos. Numa curva, se o jogador não está virando forte, o kart acompanha a curva
-   devagar e é puxado para longe da beira, e segura um pouco a derrapagem. Na reta não faz nada. Quem vira de propósito sempre manda.
+   AUTOMÁTICA SÓ NAS CURVAS: só para pilotos humanos. Na curva o kart acompanha a pista sozinho, se afasta da beira
+   e escorrega menos; quem também vira continua mandando. Na reta não faz nada. Quem vira de propósito sempre manda.
    Tecla T liga/desliga (vale para todos, inclusive celulares). */
 (function(){if(CFG.assist===undefined)CFG.assist=true;
  window.ASSIST={get on(){return CFG.assist}};
  addEventListener('keydown',e=>{if(e.code!=='KeyT'||e.repeat)return;CFG.assist=!CFG.assist;saveCfg();if(window.SOM)SOM.banner(CFG.assist?'🛞 ASSISTÊNCIA LIGADA':'🛞 ASSISTÊNCIA DESLIGADA',1.4);showA()});
  function showA(){const e=document.getElementById('asinfo');if(e)e.textContent='🛞 ASSISTÊNCIA DE DIREÇÃO: '+(CFG.assist?'LIGADA':'DESLIGADA')+' · tecla T'}
- const pd=$('padinfo');if(pd){const d=document.createElement('div');d.id='asinfo';d.style.cssText='font-weight:900;color:#11A86B;font-size:1.7vh;text-align:center;margin-top:.6vh';pd.parentNode.insertBefore(d,pd);showA()}
+ const pd=null;if(pd){const d=document.createElement('div');d.id='asinfo';d.style.cssText='font-weight:900;color:#11A86B;font-size:1.7vh;text-align:center;margin-top:.6vh';pd.parentNode.insertBefore(d,pd);showA()}
  on('kart',(k,inp,dt)=>{if(!CFG.assist||!k.human||state!=='go'||k.fin||k.air||k.fallT>0||k.spin>0||k.v<8)return;
   const n=Math.max(3,Math.round(18/SEG)),P=SP[(k.idx+n)%N],want=Math.atan2(P.x-k.x,P.z-k.z),d=wrap(want-k.h);
   if(Math.cos(d)<.35)return; /* de lado ou de ré: não atrapalha a manobra */
   /* quanto a pista vira logo à frente: reta = 0 (sem ajuda), curva fechada = ajuda cheia */
   const t0=TG[k.idx],t1=TG[(k.idx+Math.max(4,Math.round(30/SEG)))%N],cu=Math.abs(wrap(Math.atan2(t1.x,t1.z)-Math.atan2(t0.x,t0.z))),f=clamp((cu-.12)/.25,0,1);if(!f)return;
-  const st=Math.abs(inp.st||0),a=((1-Math.min(1,st/.6))*1.3+.25)*f;
+  /* na curva o kart vira sozinho; se o jogador também vira, a ajuda diminui (ele manda) */
+  const st=Math.abs(inp.st||0),a=(st>.5?1.2:3.2)*f;
   k.h+=d*(1-Math.exp(-a*dt));
-  if(!inp.drift)k.mh+=wrap(k.h-k.mh)*(1-Math.exp(-2.5*f*dt)) /* tração: menos escorregão na curva */});
+  if(!inp.drift)k.mh+=wrap(k.h-k.mh)*(1-Math.exp(-3*f*dt)) /* tração: menos escorregão na curva */});
 })();
 
 
@@ -3904,13 +3898,12 @@ body.racing{touch-action:none}
 .it{background:#0A84FF;left:52%;width:22%;top:20%;height:26%}.dr{background:#8E5BE8;left:76%;width:22%;top:20%;height:26%}
 .ac{background:#11A86B;left:52%;width:46%;top:49%;bottom:17%;font-size:7vmin}
 body .dir{bottom:17%}
-@media (orientation:portrait){.info{height:10%}
-.pad .dir{top:27%;bottom:auto;height:34%;width:23%;font-size:12vmin}.pad [data-k=L]{left:2%}.pad [data-k=R]{left:26%}
-.pad #auto{top:13%;left:2%;right:auto;width:47%;height:12%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;text-align:center;font-size:3.6vmin;padding:1vmin;border-radius:4vmin}
-.dr{left:51%;width:47%;top:13%;height:12%;font-size:5vmin}.it{left:51%;width:47%;top:27%;height:14%;font-size:5vmin}.ac{left:51%;width:47%;top:43%;bottom:auto;height:18%;font-size:6.5vmin}
-.info{gap:3vw}#imsg{max-width:30vw}}
+@media (orientation:portrait){.info{height:10%;gap:3vw}#imsg{max-width:30vw}
+.pad #auto{top:11.5%;left:2%;right:auto;width:96%;height:7%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;text-align:center;font-size:3.8vmin;padding:1vmin;border-radius:3vmin}
+.pad .it{left:2%;width:30.6%;top:20.5%;height:20%;font-size:5.5vmin}.pad .dr{left:34.7%;width:30.6%;top:20.5%;height:20%;font-size:5.5vmin}.pad .ac{left:67.4%;width:30.6%;top:20.5%;bottom:auto;height:20%;font-size:4.6vmin}
+.pad .dir{top:44%;bottom:3%;height:auto;width:47%;font-size:20vmin}.pad [data-k=L]{left:2%}.pad [data-k=R]{left:51%}}
 #auto{position:absolute;right:2%;top:3%;z-index:2;background:#11A86B;color:#fff;font-weight:900;font-size:2.6vmin;padding:1.2vmin 2vmin;border-radius:2vmin}
-#auto.off{background:#9fb2bb}
+#auto.off{background:#9fb2bb}#auto small{display:block;font-size:.7em;opacity:.85;font-weight:700}.pad #auto{flex-direction:column}
 #rot{display:none;position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(255,255,255,.96);z-index:9;align-items:center;justify-content:center;flex-direction:column;font-weight:900;color:#1F4E5F;font-size:22px;text-align:center;padding:20px}
 .endb{position:fixed;top:0;right:0;bottom:0;left:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;color:#1F4E5F}
 .endb h1{font-size:64px}.endb p{font-weight:800;color:#5f7a85}`;document.head.appendChild(css);
@@ -3920,7 +3913,7 @@ document.body.innerHTML=`<div id="pj" class="ph"><div class="hd"><b>KART DO MMT<
 <label class="lb">03 · ESCOLHA O VEÍCULO</label><div id="pv" class="chars vh"></div>
 <button id="pr" class="big">PRONTO</button><div id="pl" class="list"></div></div>
 <div id="pp" class="pad" hidden><div class="info"><b id="ipos">–</b><span id="ilap"></span><span id="iitem">ITEM: –</span><span id="imsg"></span></div>
-<div id="auto">ACELERAR AUTOMÁTICO ✔</div>
+<div id="auto">⚡ ACELERAÇÃO AUTOMÁTICA LIGADA<small>toque aqui para desligar</small></div>
 <div data-k="L" class="b dir">◀</div><div data-k="R" class="b dir">▶</div>
 <div data-k="item" class="b it">ITEM</div><div data-k="drift" class="b dr">DRIFT</div><div data-k="acc" class="b ac">ACELERAR</div></div>
 <div id="pe" class="endb" hidden><p>RESULTADO</p><h1 id="ep"></h1><p id="ew"></p><p id="enx">Aguarde a próxima corrida na TV</p></div>`;
@@ -3976,7 +3969,7 @@ function scan(ts){const now={};for(const t of ts){const el=document.elementFromP
 function push(){send({t:'in',st:(P.R?1:0)-(P.L?1:0),thr:(auto||P.acc)?1:0,item:!!P.item,drift:!!P.drift})}
 ['touchstart','touchmove','touchend','touchcancel'].forEach(n=>pad.addEventListener(n,e=>{e.preventDefault();scan(e.touches)},{passive:false}));
 pad.addEventListener('mousedown',e=>scan([e]));addEventListener('mouseup',()=>scan([]));
-const au=$('auto');const tog=e=>{e.preventDefault();e.stopPropagation();auto=!auto;au.textContent='ACELERAR AUTOMÁTICO '+(auto?'✔':'✖');au.classList.toggle('off',!auto);push()};
+const au=$('auto');const tog=e=>{e.preventDefault();e.stopPropagation();auto=!auto;au.innerHTML=auto?'⚡ ACELERAÇÃO AUTOMÁTICA LIGADA<small>toque aqui para desligar</small>':'ACELERAÇÃO MANUAL · segure ACELERAR<small>toque aqui para voltar a automática</small>';au.classList.toggle('off',!auto);push()};
 au.addEventListener('touchstart',tog,{passive:false});au.addEventListener('mousedown',tog);
 setInterval(()=>{if(!$('pp').hidden)push()},100);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;wake();if(!(conn&&conn.open)&&connect.retry){clearTimeout(again);upd('Reconectando…');if(!connect.retry(0))connect()}});
