@@ -3733,8 +3733,8 @@ on('visuals',dt=>karts.forEach(k=>{if(k.trick){k.trA=Math.min(k.trA+dt*12,Math.P
 /* ===== FIM · CORRIDA+ ===== */
 
 /* ===== ASSISTÊNCIA DE DIREÇÃO E TRAÇÃO (para quem nunca jogou) =====
-   Leve: só para pilotos humanos. Quando o jogador não está virando forte, o kart se alinha devagar com a pista
-   e é puxado para longe da beira; no gelo, segura um pouco a derrapagem. Quem vira de propósito sempre manda.
+   Leve e SÓ NAS CURVAS: só para pilotos humanos. Numa curva, se o jogador não está virando forte, o kart acompanha a curva
+   devagar e é puxado para longe da beira, e segura um pouco a derrapagem. Na reta não faz nada. Quem vira de propósito sempre manda.
    Tecla T liga/desliga (vale para todos, inclusive celulares). */
 (function(){if(CFG.assist===undefined)CFG.assist=true;
  window.ASSIST={get on(){return CFG.assist}};
@@ -3744,9 +3744,11 @@ on('visuals',dt=>karts.forEach(k=>{if(k.trick){k.trA=Math.min(k.trA+dt*12,Math.P
  on('kart',(k,inp,dt)=>{if(!CFG.assist||!k.human||state!=='go'||k.fin||k.air||k.fallT>0||k.spin>0||k.v<8)return;
   const n=Math.max(3,Math.round(18/SEG)),P=SP[(k.idx+n)%N],want=Math.atan2(P.x-k.x,P.z-k.z),d=wrap(want-k.h);
   if(Math.cos(d)<.35)return; /* de lado ou de ré: não atrapalha a manobra */
-  const st=Math.abs(inp.st||0),a=(1-Math.min(1,st/.6))*1.3+.25;
+  /* quanto a pista vira logo à frente: reta = 0 (sem ajuda), curva fechada = ajuda cheia */
+  const t0=TG[k.idx],t1=TG[(k.idx+Math.max(4,Math.round(30/SEG)))%N],cu=Math.abs(wrap(Math.atan2(t1.x,t1.z)-Math.atan2(t0.x,t0.z))),f=clamp((cu-.12)/.25,0,1);if(!f)return;
+  const st=Math.abs(inp.st||0),a=((1-Math.min(1,st/.6))*1.3+.25)*f;
   k.h+=d*(1-Math.exp(-a*dt));
-  if(!inp.drift)k.mh+=wrap(k.h-k.mh)*(1-Math.exp(-2.5*dt)) /* tração: menos escorregão */});
+  if(!inp.drift)k.mh+=wrap(k.h-k.mh)*(1-Math.exp(-2.5*f*dt)) /* tração: menos escorregão na curva */});
 })();
 
 
