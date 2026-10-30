@@ -1,5 +1,7 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Kart do Kit · MMT</title>
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>KART RUSH</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&family=Oxanium:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;background:#DCE6EA;font-family:'Segoe UI',Arial,sans-serif;color:#1F4E5F;user-select:none}
@@ -60,28 +62,94 @@ table{width:100%;border-collapse:collapse;margin-bottom:2.4vh}th{background:#1F4
 .ps6 .nm6{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ps6.j{color:#1F4E5F;background:#fff}.ps6.r{border-color:#11A86B;background:#E6F7EF}.ps6 .dot{width:3vh;height:3vh;border-radius:50%;background:#D6DEE2;flex:none}.ps6 small{flex:none;font-size:1.4vh;letter-spacing:.08em}
 .ps6.r small{color:#11A86B}
-#sMenu .card{width:min(1100px,94vw)}#sMenu h1{font-size:5vh}#sMenu h2{margin:.6vh 0 1.6vh}#sMenu .modes{margin-bottom:1.4vh;gap:1vw}#sMenu .mode{padding:1.2vh .6vw;font-size:2vh;min-width:0}#sMenu .mode small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#fases .mode{padding:1vh .4vw;font-size:1.8vh}#fases .mode.on[data-f=gelo]{background:#2E9BE0;border-color:#2E9BE0;box-shadow:0 6px 20px rgba(46,155,224,.4)}#fases .mode.on[data-f=fogo]{background:#FF5A1F;border-color:#FF5A1F;box-shadow:0 6px 20px rgba(255,90,31,.4)}#fases .mode.on[data-f=amazonia]{background:#11A86B;border-color:#11A86B;color:#fff}#fases .mode.on[data-f=placa]{background:#1E7F4F;border-color:#1E7F4F;color:#fff}#fases .mode.on[data-f=camp]{background:#E0A800;border-color:#E0A800;box-shadow:0 6px 20px rgba(224,168,0,.4)}
-#veics .mode{padding:1vh 1vw;font-size:1.9vh;background:#fff;color:#1F4E5F}#modos .mode{padding:1vh .4vw;font-size:1.8vh}#modos .mode.on{background:#1F4E5F;border-color:#1F4E5F;color:#fff;box-shadow:0 6px 20px rgba(31,78,95,.35)}#fases.dis{opacity:.35;pointer-events:none}#lfase{text-align:center;font-weight:900;font-size:2.2vh;color:#1F4E5F;letter-spacing:.08em;margin-bottom:1vh}#lwarn{color:#D9313F;font-weight:800;font-size:1.7vh;text-align:center;margin-bottom:1vh}
+/* ===== KART RUSH · identidade visual (menu e lobby) ===== */
+:root{--navy:#10182E;--or:#FF6B22;--ye:#FFD43B;--bl:#258BFF;--gr:#47D7A0;--ink:#2A1A55;--glass:rgba(16,24,46,.72)}
+.rush{font-family:Inter,'Segoe UI',Arial,sans-serif;color:#fff}
+.scr.rush{background:none;backdrop-filter:none}
+#sMenu.rush.on{display:block;background:linear-gradient(90deg,rgba(10,14,34,.82) 0%,rgba(10,14,34,.5) 34%,rgba(10,14,34,0) 58%)}
+.rwrap{position:absolute;left:4vw;top:4vh;bottom:11vh;width:min(48vw,800px);display:flex;flex-direction:column;justify-content:center;gap:1.5vh}
+.logo{font-family:Bungee,'Arial Black',Impact,sans-serif;line-height:.9;transform:rotate(-4deg);transform-origin:left center;margin-bottom:.6vh;white-space:nowrap}
+.logo b{display:inline-block;font-weight:400;font-size:11vh;color:#fff;-webkit-text-stroke:.35vh var(--ink);filter:drop-shadow(0 .8vh 0 var(--ink)) drop-shadow(0 0 2.4vh rgba(37,139,255,.55))}
+.logo b.o{margin-left:1.6vw;background:linear-gradient(180deg,#FFE680 0%,var(--ye) 35%,var(--or) 90%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .8vh 0 var(--ink)) drop-shadow(0 0 2.6vh rgba(255,107,34,.7))}
+.logo span{display:block;width:fit-content;margin-top:1.4vh;font-family:Oxanium,sans-serif;font-weight:800;font-size:1.9vh;letter-spacing:.24em;background:var(--glass);border-left:.6vh solid var(--or);padding:.6vh 1.2vw;transform:rotate(4deg);transform-origin:left}
+.pills{display:flex;flex-direction:column;gap:1.5vh;margin:.6vh 0 .8vh}
+.rush .pill{flex:none;display:flex;align-items:center;gap:1.3vw;width:fit-content;min-width:64%;padding:.9vh 2.6vw .9vh .9vh;border-radius:99px;text-align:left;cursor:pointer;
+ background:linear-gradient(180deg,#FFFFFF,#E9E4F7);color:var(--ink);border:.4vh solid #fff;font-family:Oxanium,sans-serif;font-weight:800;font-size:3.5vh;letter-spacing:.04em;
+ box-shadow:0 .8vh 0 rgba(42,26,85,.6),0 1.2vh 3vh rgba(0,0,0,.35);transition:transform .18s,box-shadow .18s}
+.rush .pill i{font-style:normal;flex:none;width:6.6vh;height:6.6vh;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:3.6vh;background:#fff;box-shadow:inset 0 0 0 .35vh #E2DCF3}
+.rush .pill small{display:block;margin-top:.2vh;font-family:Inter,sans-serif;font-weight:600;font-size:1.5vh;letter-spacing:.12em;color:#6B5E92;text-transform:uppercase}
+.rush .pill.on{background:linear-gradient(180deg,#FF9147,var(--or));color:#fff;border-color:var(--ye);transform:translateX(1.4vw) scale(1.04);box-shadow:0 .8vh 0 #B8420C,0 0 4vh rgba(255,107,34,.7)}
+.rush .pill.on small{color:#FFE9D2}.rush .pill.on i{background:var(--ye);box-shadow:none}
+.rrow{display:flex;align-items:center;gap:1vw}
+.rrow label{flex:none;width:7.6vw;font-family:Oxanium,sans-serif;font-weight:800;font-size:1.6vh;letter-spacing:.22em;color:var(--ye)}
+.rush .modes{display:flex;flex-wrap:wrap;gap:.7vh .6vw;margin:0}
+.rush .modes .mode{flex:none;padding:.75vh 1.2vw;border-radius:99px;background:rgba(16,24,46,.72);border:.25vh solid rgba(255,255,255,.28);color:#fff;font-family:Oxanium,sans-serif;font-weight:700;font-size:1.9vh;letter-spacing:.04em;text-align:left;box-shadow:none;cursor:pointer;backdrop-filter:blur(4px)}
+.rush .modes .mode small{display:none}
+.rush .modes .mode.on{background:var(--bl);border-color:#fff;color:#fff;box-shadow:0 0 2.2vh rgba(37,139,255,.75)}
+#veics .mode{background:rgba(255,107,34,.2);border-color:rgba(255,107,34,.7)}
+#fases.dis{opacity:.35;pointer-events:none}
+.links{margin-top:.6vh}
+.help{display:inline-block;padding:.8vh 3.2vw;border-radius:99px;cursor:pointer;font-family:Oxanium,sans-serif;font-weight:800;font-size:2vh;letter-spacing:.16em;color:var(--ink);
+ background:repeating-linear-gradient(135deg,var(--ye) 0 1.3vh,#A6E38A 1.3vh 2.6vh);box-shadow:0 .5vh 0 rgba(42,26,85,.6)}
+.help.on{outline:.35vh solid #fff}
+.rush .how{display:none;position:absolute;right:3vw;bottom:12vh;width:min(44vw,720px);grid-template-columns:1fr 1fr;gap:1vh;margin:0;padding:1.6vh;font-size:1.6vh;line-height:1.4;
+ background:rgba(16,24,46,.9);border:.25vh solid rgba(255,255,255,.2);border-radius:2vh;box-shadow:0 1vh 4vh rgba(0,0,0,.4)}
+.rush .how.on{display:grid}
+.rush .how div{background:rgba(255,255,255,.06);border-left:.5vh solid var(--or);border-radius:.6vh;padding:1vh 1vw;color:#E3E8FA}.rush .how b{color:var(--ye)}
+.vcard{position:absolute;right:3vw;top:5vh;width:min(25vw,400px);padding:1.8vh 1.5vw;border-radius:2.2vh;background:var(--glass);border:.25vh solid rgba(255,255,255,.18);backdrop-filter:blur(6px);box-shadow:0 1vh 4vh rgba(0,0,0,.35)}
+.vcard .who{font-family:Oxanium,sans-serif;font-weight:800;font-size:1.5vh;letter-spacing:.22em;color:var(--ye)}
+.vcard h4{font-family:Bungee,'Arial Black',sans-serif;font-weight:400;font-size:4.2vh;line-height:1.1;margin:.5vh 0 .2vh}
+.vcard p{font-size:1.7vh;color:#C9D3F5;margin-bottom:1.4vh}
+.vcard .st{display:grid;grid-template-columns:auto 1fr;gap:.8vh .9vw;align-items:center;font-family:Oxanium,sans-serif;font-weight:700;font-size:1.4vh;letter-spacing:.12em;color:#C9D3F5}
+.vcard .bar{height:1.1vh;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}.vcard .bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--bl),var(--gr));transition:width .35s}
+#sMenu .go{position:absolute;left:0;right:0;bottom:4.6vh;font-family:Oxanium,sans-serif;font-weight:800;font-size:2.1vh;letter-spacing:.14em;color:var(--ye);text-shadow:0 .3vh 0 rgba(0,0,0,.6)}
+#sMenu #padinfo{position:absolute;left:0;right:0;bottom:1vh;margin:0;color:rgba(255,255,255,.55);font-size:1.3vh}
+#sLobby.rush.on{display:flex;background:radial-gradient(ellipse at center,rgba(10,14,34,.5),rgba(10,14,34,.82))}
+.lwrap{width:min(1250px,94vw);display:flex;flex-direction:column;gap:2.2vh}
+.lhead{display:flex;align-items:center;gap:3vw}
+.logo.sm b{font-size:6.4vh}
+.lhead h3{font-family:Bungee,'Arial Black',sans-serif;font-weight:400;font-size:4.6vh;line-height:1.1;text-shadow:0 .5vh 0 var(--ink)}
+.lhead p{font-family:Oxanium,sans-serif;font-weight:700;font-size:2vh;letter-spacing:.06em;color:#C9D3F5;margin-top:.6vh}
+.rush .lrow{display:flex;gap:3vw;align-items:center;margin:0}
+.rush .qrbox{flex:none;text-align:center;padding:2vh;border-radius:2.6vh;background:var(--glass);border:.3vh solid rgba(255,255,255,.2);box-shadow:0 0 5vh rgba(255,107,34,.4)}
+.rush #qr{border:.6vh solid var(--or);border-radius:1.8vh;color:#5f7a85}
+.rush #qroom{font-family:Bungee,'Arial Black',sans-serif;font-weight:400;font-size:3.2vh;letter-spacing:.14em;color:var(--ye);margin-top:1.2vh}
+.rush #qurl{color:#9FB0D9}
+.rush .slots6{gap:1.6vh 1.2vw}
+.rush .ps6{border-radius:99px;min-height:8.4vh;padding:1vh 1.8vw 1vh 1vh;gap:1vw;background:rgba(16,24,46,.6);border:.3vh dashed rgba(255,255,255,.28);color:rgba(255,255,255,.5);font-family:Oxanium,sans-serif;font-weight:800;font-size:2.6vh}
+.rush .ps6 .dot{width:6.4vh;height:6.4vh;display:flex;align-items:center;justify-content:center;font-family:Bungee,'Arial Black',sans-serif;font-weight:400;font-size:2.8vh;color:#fff;background:rgba(255,255,255,.12);border:.35vh solid rgba(255,255,255,.75);text-shadow:0 .2vh 0 rgba(0,0,0,.4)}
+.rush .ps6.j{border-style:solid;border-color:#fff;background:linear-gradient(180deg,#FFFFFF,#E9E4F7);color:var(--ink);box-shadow:0 .6vh 0 rgba(42,26,85,.6)}
+.rush .ps6.r{border-color:var(--gr);box-shadow:0 .6vh 0 #1E8F66,0 0 3vh rgba(71,215,160,.65)}
+.rush .ps6 small{font-size:1.5vh;letter-spacing:.14em}.rush .ps6.j small{color:#6B5E92}.rush .ps6.r small{color:#14996A}
+#lfase{text-align:center;font-family:Oxanium,sans-serif;font-weight:800;font-size:2.2vh;letter-spacing:.08em;color:#fff}
+#lwarn{color:#FF8A8A;font-weight:800;font-size:1.7vh;text-align:center}
+#sLobby #lmsg{font-family:Oxanium,sans-serif;color:var(--ye);font-size:2.1vh;text-shadow:0 .3vh 0 rgba(0,0,0,.6)}
 </style></head><body>
 <script>window.PHONE=!!new URLSearchParams(location.search).get("join");addEventListener("error",e=>{if(String(e.message).includes("PHONEMODE"))e.preventDefault()});</script>
 <canvas id="gl"></canvas>
 <div id="top"><div class="ttl"><b>KART DO KIT · MMT</b><span id="fasettl">CORRIDA PELA PRODUÇÃO</span></div><div id="clock">0:00</div></div>
 <div id="div"></div><canvas id="mini" width="400" height="280"></canvas><div id="big"></div>
-<div class="sig">Guilherme Fernandes · MMT</div>
-<div id="sMenu" class="scr on"><div class="card">
-<span class="tag">01 · CORRIDA PELA PRODUÇÃO</span><h1>KART DO KIT</h1><h2>CORRIDA PELA PRODUÇÃO · PEGUE OS ITENS · CHEGUE EM PRIMEIRO</h2>
-<div class="modes"><div class="mode" id="m1">1 JOGADOR<small>contra 3 robôs</small></div><div class="mode on" id="m2">2 JOGADORES<small>TELA DIVIDIDA · +2 robôs</small></div><div class="mode" id="m3">📱 ONLINE<small>ATÉ 6 CELULARES</small></div></div>
-<div id="modos" class="modes"></div><div id="fases" class="modes"></div>
-<div id="veics" class="modes"><div class="mode" id="vp1"></div><div class="mode" id="vp2"></div></div>
-<div class="how">
+<div class="sig">KART RUSH · Guilherme Fernandes</div>
+<div id="sMenu" class="scr on rush"><div class="rwrap">
+<div class="logo"><b>KART</b><b class="o">RUSH</b><span>CORRIDA MALUCA · ATÉ 6 JOGADORES</span></div>
+<div class="pills">
+<div class="mode pill" id="m1"><i>🎮</i><div>1 JOGADOR<small>contra 3 robôs</small></div></div>
+<div class="mode pill on" id="m2"><i>👥</i><div>2 JOGADORES<small>tela dividida · +2 robôs</small></div></div>
+<div class="mode pill" id="m3"><i>📱</i><div>ONLINE<small>até 6 celulares</small></div></div></div>
+<div class="rrow"><label>MODO</label><div id="modos" class="modes"></div></div>
+<div class="rrow"><label>MAPA</label><div id="fases" class="modes"></div></div>
+<div class="rrow" id="rveh"><label>VEÍCULO</label><div id="veics" class="modes"><div class="mode" id="vp1"></div><div class="mode" id="vp2"></div></div></div>
+<div class="links"><span class="help" id="bhelp">AJUDA · H</span></div></div>
+<div class="vcard" id="vcard"></div>
+<div class="how" id="how">
 <div><b>MAPAS</b> · ❄️ Gelo escorrega · 🔥 Fogo tem lava e bolas de fogo · 🌳 Amazônia tem chuva e a Ponte Rio Negro · 💻 Placa SMT tem V-cut. Caiu num buraco? 2 s de castigo!</div>
 <div><b>CAIXAS "?"</b> · ⚡ TURBO · 📦 CAIXA · 🎯 COMPONENTE · 🛡️ ESCUDO · 🛢️ ÓLEO · ⭐ ESTRELA · 🌩️ RAIO. Quem está atrás ganha itens mais fortes!</div>
 <div><b>P1</b> · WASD · Espaço = item · Shift = drift</div>
 <div><b>P2</b> · Controle (analógico ou setas) · X = item · RB = drift (setas do teclado também)</div></div>
-<div class="go">ENTER / A PARA LARGAR · ←/→ JOGADORES · Q/E MODO · ↑/↓ MAPA</div>
-<div id="padinfo"></div></div></div>
-<div id="sLobby" class="scr"><div class="card" style="width:min(1100px,94vw)">
-<span class="tag">03 · MODO ONLINE</span><h1>ENTRE PELO CELULAR</h1><h2>ESCANEIE O QR CODE · DIGITE SEU NOME · ESCOLHA O PILOTO · PRONTO</h2>
+<div class="go">ENTER / A PARA LARGAR · ←/→ JOGADORES · Q/E MODO · ↑/↓ MAPA · V/B VEÍCULO</div>
+<div id="padinfo"></div></div>
+<div id="sLobby" class="scr rush"><div class="lwrap">
+<div class="lhead"><div class="logo sm"><b>KART</b><b class="o">RUSH</b></div><div><h3>ENTRE PELO CELULAR</h3><p>ESCANEIE O QR CODE · DIGITE SEU NOME · ESCOLHA COR E VEÍCULO · APERTE PRONTO</p></div></div>
 <div class="lrow"><div class="qrbox"><div id="qr">Gerando sala…</div><div id="qroom"></div><div id="qurl"></div></div><div id="slots" class="slots6"></div></div>
 <div id="lfase"></div><div id="lwarn"></div><div id="lmsg" class="go"></div></div></div>
 <div id="sEnd" class="scr"><div class="card"><span class="tag">02 · RESULTADO</span><h1 id="winner"></h1><h2 id="endsub">PONTUAÇÃO FINAL</h2><table id="tbl"></table><div id="endgo" class="go">ENTER / A PARA JOGAR DE NOVO</div></div></div>
@@ -2826,6 +2894,7 @@ let tm=0;function visuals(dt){tm+=dt;pickups.forEach(p=>{p.m.rotation.y=tm*2;p.m
  emit('visuals',dt)}
 const menuCam=new THREE.PerspectiveCamera(60,1,1,1500);
 function draw(){const w=innerWidth,h=innerHeight;R.setScissorTest(true);
+ if((state==='menu'||state==='lobby')&&window.srDraw&&srDraw(w,h))return;
  if(state==='menu'||state==='end'||state==='lobby'){const a=tm*.12,cx=(mmB.x0+mmB.x1)/2,cz=(mmB.z0+mmB.z1)/2;menuCam.position.set(cx+Math.sin(a)*330,150,cz+Math.cos(a)*230);menuCam.lookAt(cx,0,cz);menuCam.aspect=w/h;menuCam.updateProjectionMatrix();R.setViewport(0,0,w,h);R.setScissor(0,0,w,h);R.render(scene,menuCam);return}
  const G=grid(humans.length),gp=humans.length>2?3:0;R.setClearColor(0xFFFFFF);R.setScissor(0,0,w,h);R.clear();
  humans.forEach((k,i)=>{const q=G[i],vw=q.w*w-gp,vh=q.h*h-gp,vx=q.x*w+gp/2,vy=h-(q.y+q.h)*h+gp/2;R.setViewport(vx,vy,vw,vh);R.setScissor(vx,vy,vw,vh);k.cam.aspect=vw/vh;k.cam.updateProjectionMatrix();
@@ -2879,7 +2948,7 @@ function onNet(c,d){if(!d||!d.t||!d.cid)return;let pl=online.players.find(x=>x.c
 const MAXP=6;
 function pushLobby(){online.players.forEach(p=>tx(p,{t:'lobby',list:online.players.map(o=>({name:o.name,ci:o.ci,ready:o.ready,on:!!o.conn,me:o===p})),state,fase:faseTxt()}));renderLobby()}
 function renderLobby(){const el=$('slots');if(!el)return;let h='';for(let i=0;i<MAXP;i++){const p=online.players[i];
-  h+=p?`<div class="ps6 j${p.ready?' r':''}"><span class="dot" style="background:${p.ci>=0?hexc(p.ci):'#D6DEE2'}"></span><span class="nm6">${p.name||'(digitando…)'}</span><small>${!p.conn?'SAIU':p.ready?'✔ PRONTO':'ESCOLHENDO'}</small></div>`:`<div class="ps6"><span class="dot"></span><span class="nm6">VAGA ${i+1}</span><small>LIVRE</small></div>`}
+  h+=p?`<div class="ps6 j${p.ready?' r':''}"><span class="dot" style="background:${p.ci>=0?hexc(p.ci):'#D6DEE2'}">${i+1}</span><span class="nm6">${p.name||'(digitando…)'}</span><small>${!p.conn?'SAIU':p.ready?'✔ PRONTO':'ESCOLHENDO'}</small></div>`:`<div class="ps6"><span class="dot">${i+1}</span><span class="nm6">VAGA ${i+1}</span><small>LIVRE</small></div>`}
  el.innerHTML=h;lobbyMsg()}
 function readyN(){return online.players.filter(p=>p.ready&&p.conn&&p.conn.open).length}
 function lobbyMsg(){const n=readyN();$('lmsg').textContent=online.autoT>0?'TODOS NA LARGADA! COMEÇA EM '+Math.ceil(online.autoT)+'…':
@@ -3714,8 +3783,84 @@ STAGES.placa.build=function(d){
 
 /* ===== FIM · FÁBRICA À NOITE ===== */
 
+/* ===== KART RUSH · VITRINE DO MENU =====
+ Cidade neon à noite com palco giratório (cena própria, só no menu e no lobby).
+ srShow(veh,ci,quem) troca o veículo do palco · na etapa dos personagens, srPiloto() é trocado pelo personagem. */
+const SRV={S:null,cam:null,box:null,ref:null,ring:null,key:'',p:0,auto:0,ai:0,t:0};
+function srTex(w,h,fn){const t=new THREE.CanvasTexture(cv(w,h,fn));t.encoding=THREE.sRGBEncoding;return t}
+function srPiloto(g){const vest=B(1.7,1.4,1.2,0xFF6B22);vest.position.set(0,2.5,-.5);g.add(vest);const hd=new THREE.Mesh(new THREE.SphereGeometry(.8,14,12),M(0xF2C9A0));hd.position.set(0,3.6,-.4);g.add(hd);
+ const hat=new THREE.Mesh(new THREE.SphereGeometry(.88,14,8,0,Math.PI*2,0,Math.PI/2),M(0xFFD43B));hat.position.set(0,3.75,-.4);g.add(hat)}
+function srInit(){if(SRV.S)return;const S=SRV.S=new THREE.Scene(),add=(o,x,y,z)=>{o.position.set(x,y,z);S.add(o);return o};
+ SRV.cam=new THREE.PerspectiveCamera(36,1,.5,1200);
+ S.background=srTex(4,256,(g,w,h)=>{const r=g.createLinearGradient(0,0,0,h);r.addColorStop(0,'#060A1C');r.addColorStop(.45,'#171450');r.addColorStop(.72,'#3E2484');r.addColorStop(.86,'#7A3AA8');r.addColorStop(1,'#10182E');g.fillStyle=r;g.fillRect(0,0,w,h)});
+ S.fog=new THREE.Fog(0x2A1C68,220,760);
+ S.add(new THREE.HemisphereLight(0x9DB2FF,0x2A1446,.75));
+ const key=new THREE.SpotLight(0xFFFFFF,1.5,140,.42,.6);key.position.set(8,46,26);key.target.position.set(0,0,0);S.add(key,key.target);
+ const pk=new THREE.PointLight(0xFF3FA4,1.4,80);pk.position.set(-22,10,8);S.add(pk);const cy=new THREE.PointLight(0x22D3FF,1.3,80);cy.position.set(20,8,-6);S.add(cy);
+ // estrelas e lua
+ const sp=[];for(let i=0;i<260;i++)sp.push((Math.random()-.5)*1100,90+Math.random()*320,-520-Math.random()*60);
+ const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));S.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0xFFFFFF,size:2,sizeAttenuation:false,fog:false})));
+ const moon=new THREE.Sprite(new THREE.SpriteMaterial({map:srTex(128,128,g=>{g.shadowColor='#FFE680';g.shadowBlur=24;g.fillStyle='#FFE27A';g.beginPath();g.arc(64,64,40,0,7);g.fill();g.globalCompositeOperation='destination-out';g.shadowBlur=0;g.beginPath();g.arc(84,50,38,0,7);g.fill()}),fog:false}));
+ moon.scale.set(46,46,1);add(moon,150,190,-480);
+ // prédios com janelas acesas e neon no topo
+ const win=[0,1,2].map(k=>srTex(64,128,g=>{g.fillStyle='#000';g.fillRect(0,0,64,128);const cs=[['#7FE7FF','#3E7BFF'],['#FF8AD8','#B04BFF'],['#FFE08A','#FF9B4B']][k];
+  for(let y=4;y<124;y+=8)for(let x=4;x<60;x+=8)if(Math.random()<.5){g.fillStyle=cs[Math.random()<.7?0:1];g.globalAlpha=.55+Math.random()*.45;g.fillRect(x,y,5,5)}}));
+ const neon=[0xFF3FA4,0x22D3FF,0xB04BFF,0xFFD43B];
+ for(let i=0;i<46;i++){const w=16+Math.random()*26,h=30+Math.random()*(Math.abs(i-23)<8?60:120),d=14+Math.random()*16,x=-420+i*18.5+Math.random()*8,z=-230-Math.random()*190;
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color:0x1A2050,roughness:.6,metalness:.2,emissive:0xFFFFFF,emissiveMap:win[i%3],emissiveIntensity:.9}));add(m,x,h/2,z);
+  if(i%2===0){const c=neon[i%4],e=new THREE.Mesh(new THREE.BoxGeometry(w+.6,1,d+.6),new THREE.MeshBasicMaterial({color:c}));add(e,x,h,z);const v=new THREE.Mesh(new THREE.BoxGeometry(.6,h,.6),new THREE.MeshBasicMaterial({color:c}));add(v,x-w/2,h/2,z+d/2)}}
+ // letreiros neon
+ [['RUSH','#FF3FA4',-170,96,-215],['TURBO','#22D3FF',120,74,-215],['★ 6P ★','#FFD43B',260,118,-300]].forEach(q=>{const t=srTex(256,96,g=>{g.fillStyle='rgba(10,8,30,.85)';g.fillRect(0,0,256,96);g.strokeStyle=q[1];g.lineWidth=6;g.shadowColor=q[1];g.shadowBlur=18;g.strokeRect(8,8,240,80);
+   g.fillStyle='#fff';g.font='900 54px Bungee, Arial Black, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(q[0],128,52)});
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(40,15),new THREE.MeshBasicMaterial({map:t,fog:false}));add(pl,q[2],q[3],q[4])});
+ // telão do palco (raios rosa) com treliça
+ const scr=new THREE.Mesh(new THREE.PlaneGeometry(46,22),new THREE.MeshBasicMaterial({map:srTex(256,128,g=>{g.fillStyle='#FF6FC8';g.fillRect(0,0,256,128);g.fillStyle='#FFD6F0';for(let a=0;a<24;a++){g.beginPath();g.moveTo(128,64);g.arc(128,64,300,a*Math.PI/12,a*Math.PI/12+Math.PI/24);g.fill()}
+   g.fillStyle='#fff';g.beginPath();g.arc(128,64,16,0,7);g.fill()})}));
+ const st=new THREE.Group();st.add(scr);scr.position.set(0,17,0);const tr=0x8C93B8;[[-24,0],[24,0]].forEach(q=>{const c=B(1.2,30,1.2,tr);c.position.set(q[0],15,0);st.add(c)});const tp=B(50,1.2,1.2,tr);tp.position.y=29.5;st.add(tp);
+ const bs=B(52,2,8,0x2B2F5C);bs.position.set(0,1,2);st.add(bs);st.position.set(22,0,-100);st.rotation.y=-.18;S.add(st);
+ // coqueiros
+ const palma=(x,z,h,r)=>{const g=new THREE.Group();let px=0,py=0;for(let k=0;k<7;k++){const c=new THREE.Mesh(new THREE.CylinderGeometry(.7-k*.05,.8-k*.05,h/7+.2,8),M(k%2?0x8A5A3B:0x9C6B47));px+=r*k*.08;py+=h/7;c.position.set(px,py-h/14,0);c.rotation.z=-r*.12;g.add(c)}
+  for(let k=0;k<8;k++){const l=new THREE.Mesh(new THREE.BoxGeometry(1.8,.18,10),new THREE.MeshStandardMaterial({color:k%2?0x2FB35A:0x23934A,emissive:0x0B3A1A}));const a=k/8*Math.PI*2,lg=new THREE.Group();lg.position.set(px,py,0);lg.rotation.y=a;l.position.z=4.4;l.rotation.x=.55;lg.add(l);g.add(lg)}
+  g.position.set(x,0,z);S.add(g)};
+ palma(-16,-44,30,1);palma(-30,-64,24,-1);palma(34,-26,24,-1);
+ // chão escuro com grade neon
+ const grid=srTex(256,256,g=>{g.fillStyle='#0E1430';g.fillRect(0,0,256,256);g.strokeStyle='rgba(120,90,255,.55)';g.lineWidth=3;for(let i=0;i<=256;i+=64){g.beginPath();g.moveTo(i,0);g.lineTo(i,256);g.stroke();g.beginPath();g.moveTo(0,i);g.lineTo(256,i);g.stroke()}});
+ grid.wrapS=grid.wrapT=THREE.RepeatWrapping;grid.repeat.set(60,60);
+ const fl=new THREE.Mesh(new THREE.PlaneGeometry(1400,1400),new THREE.MeshStandardMaterial({map:grid,color:0x8890C0,roughness:.35,metalness:.55,transparent:true,opacity:.86}));fl.rotation.x=-Math.PI/2;fl.renderOrder=1;S.add(fl);
+ // palco giratório
+ const brilho=new THREE.Mesh(new THREE.CircleGeometry(19,48),new THREE.MeshBasicMaterial({map:srTex(128,128,g=>{const r=g.createRadialGradient(64,64,10,64,64,64);r.addColorStop(0,'rgba(255,90,190,.75)');r.addColorStop(.6,'rgba(160,60,255,.35)');r.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=r;g.fillRect(0,0,128,128)}),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
+ brilho.rotation.x=-Math.PI/2;add(brilho,0,.05,0);brilho.renderOrder=2;
+ add(new THREE.Mesh(new THREE.CylinderGeometry(10,10.6,1.1,56),new THREE.MeshStandardMaterial({color:0x1C2350,metalness:.7,roughness:.25,transparent:true,opacity:.8})),0,.55,0);
+ const ring=SRV.ring=new THREE.Group();S.add(ring);
+ const rc=new THREE.Mesh(new THREE.TorusGeometry(10.15,.22,8,72),new THREE.MeshBasicMaterial({color:0x22D3FF}));rc.rotation.x=Math.PI/2;rc.position.y=1.12;ring.add(rc);
+ for(let k=0;k<16;k++){const d=new THREE.Mesh(new THREE.BoxGeometry(.9,.2,.9),new THREE.MeshBasicMaterial({color:k%2?0xFF3FA4:0xFFD43B}));const a=k/16*Math.PI*2;d.position.set(Math.cos(a)*9,1.15,Math.sin(a)*9);ring.add(d)}
+ const ro=new THREE.Mesh(new THREE.TorusGeometry(13,.14,6,90),new THREE.MeshBasicMaterial({color:0xFF3FA4}));ro.rotation.x=Math.PI/2;add(ro,0,.08,0);
+ // fachos de luz
+ [[-9,-.25],[9,.25]].forEach(q=>{const c=new THREE.Mesh(new THREE.ConeGeometry(9,58,32,1,true),new THREE.MeshBasicMaterial({color:0xBFD4FF,transparent:true,opacity:.06,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));c.position.set(q[0],29,-4);c.rotation.z=q[1];S.add(c)});
+ SRV.box=new THREE.Group();SRV.box.position.y=1.1;SRV.box.scale.setScalar(1.35);S.add(SRV.box);SRV.ref=new THREE.Group();SRV.ref.position.y=1.1;SRV.ref.scale.set(1.35,-1.35,1.35);S.add(SRV.ref);
+ $('bhelp').addEventListener('click',srHelp);setMode(mode)}
+function srHelp(){$('how').classList.toggle('on');$('bhelp').classList.toggle('on',$('how').classList.contains('on'))}
+addEventListener('keydown',e=>{if(state==='menu'&&e.code==='KeyH')srHelp()});
+const srN=(v,a,b)=>Math.round(18+82*Math.max(0,Math.min(1,(v-a)/(b-a))));
+function srShow(veh,ci,quem){if(!SRV.S)return;veh=VEH[veh]?veh:'kart';const k=veh+'|'+ci+'|'+quem;if(SRV.key===k)return;
+ {SRV.key=k;[SRV.box,SRV.ref].forEach(G=>{while(G.children.length)G.remove(G.children[0]);const g=new THREE.Group();vehBody(g,cols[ci],veh);srPiloto(g);
+   const bb=new THREE.Box3().setFromObject(g),c=bb.getCenter(new THREE.Vector3());g.position.z=-c.z;const L=Math.max(bb.max.z-bb.min.z,bb.max.x-bb.min.x);if(L>16){const s=16/L;g.scale.setScalar(s);g.position.z*=s}G.add(g)})}
+ const v=VEH[veh],el=$('vcard');if(el)el.innerHTML=`<div class="who">${quem}</div><h4>${v.nm}</h4><p>${v.ico} ${v.tx}</p><div class="st">
+  <span>VELOCIDADE</span><div class="bar"><i style="width:${srN(v.spd,.88,1.1)}%"></i></div><span>ACELERAÇÃO</span><div class="bar"><i style="width:${srN(v.acc,.75,1.3)}%"></i></div>
+  <span>CURVA</span><div class="bar"><i style="width:${srN(v.str,.75,1.3)}%"></i></div><span>PESO</span><div class="bar"><i style="width:${srN(v.peso,.6,1.8)}%"></i></div></div>`}
+function srSync(){const loc=state==='menu'&&mode!=='online';if(loc){const p=Math.min(SRV.p,mode-1);srShow(LVEH[p],p,'JOGADOR '+(p+1))}else srShow(VKEYS[SRV.ai%VKEYS.length],SRV.ai%6,'GARAGEM')}
+{const _sv=showVeh;showVeh=function(){_sv();try{srSync()}catch(e){}}}
+{const _cv=cycleVeh;cycleVeh=function(i){SRV.p=i;_cv(i)}}
+{const _sm=setMode;setMode=function(m){_sm(m);const r=$('rveh');if(r)r.style.display=m==='online'?'none':'';const v2=$('vp2');if(v2)v2.style.display=m===2?'':'none';if(SRV.p>=(m===2?2:1))SRV.p=0;try{srSync()}catch(e){}}}
+function srDraw(w,h){if(!SRV.S)return false;const dt=Math.min(.05,tm-SRV.t);SRV.t=tm;
+ if(!(state==='menu'&&mode!=='online')){SRV.auto+=dt;if(SRV.auto>4.5){SRV.auto=0;SRV.ai++}}srSync();
+ SRV.box.rotation.y+=dt*.55;SRV.ref.rotation.y=SRV.box.rotation.y;SRV.ring.rotation.y-=dt*.25;
+ const c=SRV.cam,a=w/h,lb=state==='lobby';c.aspect=a;
+ // menu: palco à direita da tela · lobby: palco no centro, mais longe
+ const ox=lb?0:-17*Math.min(1.25,a/1.6),bob=Math.sin(tm*.35)*1.2;c.position.set(ox+(lb?0:4)+Math.sin(tm*.15)*2,lb?16:13+bob*.3,lb?64:52);c.lookAt(ox,lb?7:7.5,0);c.updateProjectionMatrix();
+ R.setViewport(0,0,w,h);R.setScissor(0,0,w,h);R.render(SRV.S,c);return true}
 
-renderSel();refreshSel();selectStage(mapaAtual());
+renderSel();refreshSel();selectStage(mapaAtual());srInit();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;try{padMenu()}catch(e){}if(state==='lobby')lobbyTick(dt);if(mode==='online'&&(state==='count'||state==='go'))phoneTick(dt);if(state==='count'||state==='go')update(dt);else if(update.fe){update.fe=0}visuals(dt);if(state==='count'||state==='go')hud();draw();requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
