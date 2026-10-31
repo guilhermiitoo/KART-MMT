@@ -3692,12 +3692,14 @@ sparkG.setAttribute('position',new THREE.BufferAttribute(sp,3));sparkG.setAttrib
 const sparks=new THREE.Points(sparkG,new THREE.PointsMaterial({size:.7,vertexColors:true,transparent:true,depthWrite:false}));sparks.frustumCulled=false;scene.add(sparks);let spi=0;
 const LVC=[[0,0,0],[.3,.7,1],[1,.6,.1],[.8,.3,1]];
 /* acha o melhor atalho: corta uma curva por dentro, longe de buracos e de outros trechos */
-function acharAtalho(){let best=null;for(let a=0;a<N;a+=6)for(const len of[40,55,70]){if(ST.atalho&&(a/N<ST.atalho[0]||a/N>ST.atalho[1]))continue;const b=a+len,pa=SP[a%N],pb=SP[b%N],ta=TG[a%N],tb=TG[b%N];
+function acharAtalho(){let best=null;for(let a=0;a<N;a+=6)for(const len of[40,55,70,90,110]){if(ST.atalho&&(a/N<ST.atalho[0]||a/N>ST.atalho[1]))continue;const b=a+len,pa=SP[a%N],pb=SP[b%N],ta=TG[a%N],tb=TG[b%N];
   const turn=wrap(Math.atan2(tb.x,tb.z)-Math.atan2(ta.x,ta.z));if(Math.abs(turn)<1.3)continue;const sg=turn>0?1:-1;
   const A=ptAt((a%N)/N,sg*(W/2-3)),Bp=ptAt((b%N)/N,sg*(W/2-3));const dx=Bp.x-A.x,dz=Bp.z-A.z,L=Math.hypot(dx,dz);if(L<30)continue;
   if(nearGap((a%N)/N,25)||nearGap((b%N)/N,25)||nearGap(((a+len/2)%N)/N,25))continue;let ok=true,off=0;
   for(let t=.15;t<=.85&&ok;t+=.05){const x=A.x+dx*t,z=A.z+dz*t;let md=1e9;for(let i=0;i<N;i+=2){const d=Math.hypot(SP[i].x-x,SP[i].z-z);if(d<md)md=d;const rel=ixd(i,a);if(rel>len+30&&rel<N-30&&d<W/2+10)ok=false}off=Math.max(off,md)}
-  if(!ok||off<W/2+6)continue;const gain=len*SEG-L;if(!best||gain>best.gain)best={A,B:Bp,gain,a,b}}return best}
+  /* ganho medido pela BORDA DE DENTRO (quem corta por dentro já anda menos); o atalho tem que sair bem da pista */
+  let inner=0;for(let i=a;i<b;i++){const p0=ptAt((i%N)/N,sg*(W/2-3)),p1=ptAt(((i+1)%N)/N,sg*(W/2-3));inner+=Math.hypot(p1.x-p0.x,p1.z-p0.z)}
+  if(!ok||off<W/2+14)continue;const gain=inner-L;if(gain<20)continue;if(!best||gain>best.gain)best={A,B:Bp,gain,a,b}}return best}
 const CW=6.5; /* meia largura do atalho */
 /* identidade visual do atalho em cada mapa: chão, bordas (2 cores alternadas), seta, poste da cerca e luz */
 const CUTS={gelo:{b:'#EAF4FA',n:'rgba(160,200,225,.35)',e:['#5FB8E0','#FFFFFF'],a:'#2E7FB8',post:0x5F7F95,lamp:0x5FD0FF,off:0x1C4A60},
