@@ -1,0 +1,6 @@
+# O site publica a raiz do repositório (index.html = KART RUSH).
+# A pasta versao-antiga-mmt/ guarda a versão antiga do KART MMT só no GitHub:
+# ela é apagada antes de publicar, então não sobe para o Netlify.
+[build]
+  publish = "."
+  command = "rm -rf versao-antiga-mmt"
