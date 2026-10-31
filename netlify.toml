@@ -3,4 +3,4 @@
 # ela é apagada antes de publicar, então não sobe para o Netlify.
 [build]
   publish = "."
-  command = "rm -rf versao-antiga-mmt"
+  command = "rm -rf versao-antiga-mmt fonte"
