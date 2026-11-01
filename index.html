@@ -5367,7 +5367,7 @@ function setSom(v){RM.snd=v;try{localStorage.setItem('kr_musica',v?'1':'0')}catc
 .rm-mi .tx b{display:block;font-family:Rajdhani,Oxanium,sans-serif;font-weight:700;font-size:2.9vh;letter-spacing:.04em;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rm-mi .st{display:block;margin:.35vh 0 .3vh;font-size:1.75vh;letter-spacing:.14em;color:var(--ye)}.rm-mi .st i{font-style:normal;color:rgba(255,255,255,.16)}
 .rm-mi small{display:block;font-weight:600;font-size:1.3vh;letter-spacing:.08em;text-transform:uppercase;color:#93A3D1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rm-mi:hover{border-color:rgba(255,255,255,.36)}
+.rm-mi:hover{border-color:rgba(255,107,34,.75);background:linear-gradient(90deg,rgba(255,107,34,.18),rgba(20,28,62,.88) 70%)}
 .rm-mi.on{transform:translateX(1.3vw);border-color:var(--or);background:linear-gradient(90deg,rgba(255,107,34,.36),rgba(20,28,62,.92) 72%);box-shadow:0 .6vh 0 #95330B,0 0 3.4vh rgba(255,107,34,.45)}
 .rm-mi.on .th img{filter:none}.rm-mi::after{content:'▶';position:absolute;right:1vw;top:50%;margin-top:-1.2vh;font-size:2.2vh;line-height:1;color:var(--ye);opacity:0;transition:opacity .2s}.rm-mi.on::after{opacity:1}
 .rm-prev{position:absolute;left:calc(min(35vw,620px) + 6.5vw);right:3vw;top:15.5vh;bottom:12.5vh;border-radius:2.6vh;overflow:hidden;
@@ -5541,6 +5541,7 @@ function homeSel(i,snd){i=(i+MOD.length)%MOD.length;if(i!==RM.hi&&snd!==false)ti
 function homeGo(){const o=MOD[RM.hi],el=$$('.rm-mb')[RM.hi];if(el){el.classList.remove('go');void el.offsetWidth;el.classList.add('go')}okS();setMode(o.m);
  setTimeout(()=>{if(state==='menu')show('map')},170)}
 $('rmKH').addEventListener('click',e=>{const q=e.target.closest('.ed');if(!q)return;if(/PISTA/.test(q.textContent)){if(window.PISTAS)PISTAS.abrir(null)}else{const b=$('bedit');if(b)b.click()}});
+$('rmModes').addEventListener('mouseover',e=>{const b=e.target.closest('.rm-mb');if(b&&+b.dataset.i!==RM.hi)homeSel(+b.dataset.i)});
 $('rmModes').addEventListener('click',e=>{const b=e.target.closest('.rm-mb');if(b){unlock();homeSel(+b.dataset.i,false);homeGo()}});
 
 /* ---------- tela de mapa ---------- */
@@ -5582,14 +5583,14 @@ function mapGo(){const id=lista()[RM.mi];okS();const on=mode==='online';
  loading(RM.camp?CAMP[0]:id,(RM.camp?'CAMPEONATO · ':'')+(on?'ABRINDO A SALA ONLINE':'ABRINDO A GARAGEM'),()=>{
   if(RM.camp){SMODE='camp';initChamp();setModo('camp')}else{CH.on=false;setFase(id);setModo('corrida')}
   if(on)openLobby();else show('garage')})}
-$('rmList').addEventListener('click',e=>{if(e.target.closest('.rm-new')){abrePista(true);return}const b=e.target.closest('.rm-mi');if(!b)return;RM.mouse=true;unlock();const i=+b.dataset.i;if(i===RM.mi)mapGo();else mapSel(i)});
+$('rmList').addEventListener('click',e=>{if(e.target.closest('.rm-new')){abrePista(true);return}const b=e.target.closest('.rm-mi');if(!b)return;RM.mouse=true;if(RM.camp){const id=lista()[+b.dataset.i];RM.camp=false;RM.mi=Math.max(0,lista().indexOf(id));tick();mapHTML();return}unlock();const i=+b.dataset.i;if(i===RM.mi)mapGo();else mapSel(i)});
 $('rmTabs').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b)setCamp(b.dataset.c==='1')});
 $('rmBack').addEventListener('click',()=>{backS();show('home')});$('rmBots').addEventListener('click',()=>{unlock();setDif(DIF+1)});$('rmOk').addEventListener('click',()=>{unlock();mapGo()});
 
 function show(s){RM.scr=s;RM.seed=true;$('rmHome').classList.toggle('on',s==='home');$('rmMap').classList.toggle('on',s==='map');$('rmGar').classList.toggle('on',s==='garage');
  SM.classList.toggle('rmmap',s==='map');SM.classList.toggle('rmgar',s==='garage');
  if(s==='home'){RM.hi=Math.max(0,MOD.findIndex(o=>o.m===mode));homeHTML()}
- else if(s==='map'){RM.camp=SMODE==='camp';const L=lista();RM.mi=Math.max(0,L.indexOf(SEL));mapHTML()}
+ else if(s==='map'){RM.camp=false;const L=lista();RM.mi=Math.max(0,L.indexOf(SEL));mapHTML()}
  else gOpen();hints(true)}
 RM.show=show;
 RM.snap=(S,cam,w,h)=>{if(!pvInit())return null;const R2=PV.R,pr=R2.getPixelRatio();R2.setPixelRatio(1);R2.setSize(w,h,false);R2.setClearColor(0,0);cam.aspect=w/h;cam.updateProjectionMatrix();R2.render(S,cam);const u=R2.domElement.toDataURL();R2.setPixelRatio(pr);PV.t=0;return u};
@@ -6418,7 +6419,7 @@ const NOMES={foguete:'FOGUETE',gosma:'GOSMA',espinho:'ESPINHOS',escudo:'ESCUDO',
 function render(){const I=(window.ITENS2&&ITENS2.I2.icons)||{},em={foguete:'🚀',gosma:'🟣',espinho:'🦔',escudo:'🛡️',bolha:'🫧',raio:'⚡',nitro:'🔋',ima:'🧲',fantasma:'👻',surpresa:'🎁'};
  el.innerHTML=`<h1>COMO JOGAR<small>4 COISAS E VOCÊ ESTÁ PRONTO</small></h1><div class="cs">
  <div class="c" style="--c:#2E9BFF;--i:0"><i>🏎️</i><b>PILOTAR</b><p><em>P1</em> <kbd>W</kbd> acelera · <kbd>S</kbd> freia · <kbd>A</kbd><kbd>D</kbd> vira</p><p><em>P2</em> setas <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></p><p><em>Controle</em> RT ou A acelera · LT ou B freia · analógico vira</p><p><em>Celular</em> botões na tela</p><p><kbd>ESC</kbd> sai da corrida · <kbd>M</kbd> música</p></div>
- <div class="c" style="--c:#FF6B22;--i:1"><i>💨</i><b>DRIFT = TURBO</b><p>Numa curva, segure <kbd>SHIFT</kbd> (P1), <kbd>/</kbd> (P2) ou <kbd>RB</kbd> no controle.</p><p>As faíscas mudam de cor: <em>azul → laranja → roxo</em>. Quanto mais tempo, maior o turbo quando soltar!</p><p>As setas laranja no chão também dão turbo.</p></div>
+ <div class="c" style="--c:#FF6B22;--i:1"><i>💨</i><b>DRIFT = TURBO</b><p>Numa curva, segure <kbd>SHIFT</kbd> (P1), <kbd>/</kbd> (P2) ou <kbd>RB</kbd> no controle.</p><p>As faíscas mudam de cor: <em>azul → laranja → roxo</em>. Quanto mais tempo, maior o turbo quando soltar!</p><p><em>Pulou uma rampa?</em> Aperte o drift no ar: o kart gira e ganha turbo ao pousar!</p><p>As setas laranja no chão também dão turbo.</p></div>
  <div class="c" style="--c:#FFD43B;--i:2"><i>🎁</i><b>ITENS</b><p>Passe nas caixas <em>"?"</em>: a roleta sorteia um item. Use com <kbd>ESPAÇO</kbd> (P1), <kbd>ENTER</kbd> (P2) ou <kbd>X</kbd> no controle.</p><p>Quem está atrás ganha itens mais fortes.</p>
   <div class="its">${Object.keys(NOMES).map(k=>`<span>${I[k]?`<img src="${I[k]}" alt="">`:`<em>${em[k]}</em>`}${NOMES[k]}</span>`).join('')}</div></div>
  <div class="c" style="--c:#47D7A0;--i:3"><i>🪙</i><b>MOEDAS E PERIGOS</b><p>Cada moeda deixa o kart mais rápido (até 10). Levou um golpe? Perde 3.</p><p>Caiu num buraco ou na lava: <em>2 segundos de castigo</em>. Acelere antes das rampas!</p><p>A faixa azul <em>gruda-gruda</em> segura o kart na espiral. Procure os atalhos!</p></div></div>
@@ -6458,6 +6459,15 @@ function colideKarts(k,dt){if(k.bx||k.bz){k.x+=k.bx*dt;k.z+=k.bz*dt;const f=Math
   const lim=40;[k,o].forEach(q=>{const m=Math.hypot(q.bx,q.bz);if(m>lim){q.bx*=lim/m;q.bz*=lim/m}});
   if(-rel>12){const forte=Math.min(1,-rel/45);rumble(k,.3+forte*.6);rumble(o,.3+forte*.6);[k,o].forEach(q=>{if(q.human)q.shake=Math.max(q.shake||0,forte*.6)});
    if((k.human||o.human)&&-rel>16)sfx(90+Math.random()*50,.12,'square',.05+forte*.05);const F=window.ITENS2;if(F&&F.puff)F.puff(best.px,Math.max(k.y,o.y)+1.4,best.pz,Math.round(6+forte*14),[0xFFE08A,0xFF9A2E,0xFFFFFF],8+forte*10,.35,3,18);emit('bump',k,o,forte)}}}
+/* ===== KART RUSH · MANOBRA NO PULO =====
+ No ar (rampa ou lombada), aperte o DRIFT (Shift, / ou RB): o kart dá um giro rápido e, ao pousar, ganha TURBO. Robôs também fazem às vezes. */
+on('kart',(k,inp,dt)=>{const pr=!!(inp&&inp.drift)&&!k.trDp;k.trDp=!!(inp&&inp.drift);if(!k.air||k.pit||k.fallT>0||k.trick||state!=='go')return;
+ if(k.human?pr:Math.random()<dt*(typeof DIF!=='undefined'&&DIF===0?1.2:3.5)){k.trick=1;k.trT=0;if(k.human){sfx(880,.12,'triangle',.06);setTimeout(()=>sfx(1320,.1,'triangle',.05),70)}
+  const F=window.ITENS2;if(F&&F.puff)F.puff(k.x,k.y+1.5,k.z,14,[0xFFFFFF,0x7FDBFF,0xFFD43B],8,.4,3,0)}});
+on('land',k=>{if(!k.trick)return;k.trick=0;if(k.fallT>0)return;k.boost=Math.max(k.boost,1.5);k.shake=Math.max(k.shake||0,.3);say(k,'✨ MANOBRA! TURBO!','#FFD43B');if(k.human){sfx(600,.3,'sawtooth',.06);rumble(k,.5)}
+ const F=window.ITENS2;if(F&&F.puff)F.puff(k.x,k.y+1,k.z,22,[0xFFD43B,0xFF9A2E,0x7FDBFF],12,.45,4,8)});
+on('fall',k=>{k.trick=0;k.trT=undefined});on('start',()=>karts.forEach(k=>{k.trick=0;k.trT=undefined}));
+on('visuals',dt=>{for(const k of karts){if(k.trT===undefined)continue;k.trT+=dt;const u=k.trT/.42;if(u>=1){k.trT=undefined;continue}const e=1-Math.pow(1-u,3);k.g.rotation.y+=e*Math.PI*2;k.g.rotation.z+=Math.sin(u*Math.PI)*.25}});
 renderSel();refreshSel();selectStage(mapaAtual());srInit();
 let last=performance.now();
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;try{padMenu()}catch(e){}if(state==='lobby')lobbyTick(dt);if(mode==='online'&&(state==='count'||state==='go'))phoneTick(dt);if(state==='count'||state==='go')update(dt);else if(update.fe){update.fe=0}visuals(dt);if(state==='count'||state==='go')hud();draw();requestAnimationFrame(loop)}
