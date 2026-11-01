@@ -4718,6 +4718,298 @@ on('kart',k=>{if(k.human||!ST||ST.id!=='fogo'||!V)return;const P=V.ponte,ph=P.t%
   shots.push({x:m.position.x,z:m.position.z,h:k.h,tg,own:k,t:5,m,fi:k.fi+2,lat:k.lat});say(k,'🚀 FOGUETINHO LANÇADO!','#0A84FF');sfx(760,.25,'square')}});
  on('visuals',()=>{luzM.emissiveIntensity=Math.floor(tm*4)%2?1.6:.15})}
 
+/* ===== KART RUSH · ITENS 2.0 (etapa 3) =====
+ 10 itens novos (visual das referências, modelos feitos em código) no lugar dos antigos:
+ 🚀 MINI FOGUETE persegue o kart da frente · 🟣 GOSMA MALUCA vira poça escorregadia atrás · 🦔 BOLA ESPINHOSA rola pela pista e derruba quem estiver no caminho
+ 🛡️ ESCUDO DE ENERGIA bloqueia 1 ataque (20 s) · 🫧 BOLHA PROTETORA protege de tudo por 6 s · ⚡ RAIO TURBO impulso curto · 🔋 COMBUSTÍVEL NITRO impulso longo
+ 🧲 ÍMÃ DE MOEDAS puxa as moedas por perto (7 s) · 👻 FANTASMA kart translúcido, atravessa karts e ataques (5 s) · 🎁 CAIXA SURPRESA sorteia outro item
+ Caixa "?" da pista: sorteio com ROLETA (o item fica 'roleta' enquanto gira). Sorteio pela posição: o 1º recebe menos itens de ataque.
+ Estado no kart (prefixo i2): i2Sh escudo · i2Bu bolha · i2Gh fantasma · i2Im ímã · i2Roll/i2Pend roleta · i2Tr rastro (cor/tempo). */
+{
+const I2={rk:[],sb:[],goo:[],fly:[],icons:{},cd:0};
+const C2=c=>new THREE.Color(c).convertSRGBToLinear();
+/* ---------- sons (sintetizados) ---------- */
+const AC=()=>{try{actx=actx||new (window.AudioContext||window.webkitAudioContext)()}catch(e){}return actx};
+let NZB=null;
+function tone(f0,f1,d,tp,v,dl){const a=AC();if(!a||v<=0)return;const t=a.currentTime+(dl||0),o=a.createOscillator(),g=a.createGain();o.type=tp||'sine';o.frequency.setValueAtTime(f0,t);if(f1&&f1!==f0)o.frequency.exponentialRampToValueAtTime(f1,t+d);
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.012);g.gain.exponentialRampToValueAtTime(.0008,t+d);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.05)}
+function nz(d,v,ft,f0,f1,dl){const a=AC();if(!a||v<=0)return;if(!NZB){NZB=a.createBuffer(1,a.sampleRate,a.sampleRate);const q=NZB.getChannelData(0);for(let i=0;i<q.length;i++)q[i]=Math.random()*2-1}
+ const t=a.currentTime+(dl||0),s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=NZB;f.type=ft||'lowpass';f.frequency.setValueAtTime(f0,t);if(f1)f.frequency.exponentialRampToValueAtTime(f1,t+d);
+ g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0008,t+d);s.connect(f);f.connect(g);g.connect(a.destination);s.start(t);s.stop(t+d+.05)}
+/* volume: quem usou é humano = cheio; robô perto de um humano = baixo; longe = mudo */
+const vol=k=>!k?0:k.human?1:humans.some(h=>Math.hypot(h.x-k.x,h.z-k.z)<150)?.35:0;
+const SND={
+ foguete:v=>{tone(260,1500,.5,'sawtooth',.05*v);nz(.6,.14*v,'bandpass',600,3200)},
+ gosma:v=>{tone(420,90,.35,'sine',.14*v);nz(.25,.12*v,'lowpass',900,200,.05);tone(180,60,.2,'triangle',.08*v,.22)},
+ espinho:v=>{tone(120,520,.18,'square',.06*v);tone(520,140,.3,'triangle',.08*v,.12);nz(.6,.07*v,'lowpass',300,120,.1)},
+ escudo:v=>{tone(520,1040,.35,'sine',.09*v);tone(780,1560,.4,'triangle',.05*v,.06)},
+ bolha:v=>{[0,.07,.14,.21].forEach((d,i)=>tone(300+i*120,900+i*200,.12,'sine',.08*v,d))},
+ raio:v=>{tone(1800,200,.18,'square',.06*v);nz(.4,.12*v,'highpass',3000,800,.02);tone(320,900,.5,'sawtooth',.04*v,.05)},
+ nitro:v=>{nz(1.1,.18*v,'lowpass',200,2400);tone(110,330,1,'sawtooth',.06*v);tone(220,660,1,'square',.025*v,.05)},
+ ima:v=>{tone(220,230,.6,'sine',.1*v);tone(440,460,.6,'sine',.04*v);tone(880,1320,.15,'triangle',.05*v,.45)},
+ fantasma:v=>{tone(700,350,.9,'triangle',.07*v);tone(705,345,.9,'sine',.05*v,.03);tone(500,250,.7,'sine',.04*v,.3)},
+ surpresa:v=>{[523,659,784,1047].forEach((f,i)=>tone(f,f,.16,'square',.05*v,i*.07));nz(.3,.06*v,'highpass',4000,8000,.25)},
+ boom:v=>{nz(.7,.22*v,'lowpass',2000,90);tone(160,40,.5,'sine',.25*v)},
+ bloqueio:v=>{nz(.35,.16*v,'highpass',2500,6000);tone(1700,900,.25,'triangle',.08*v)},
+ tique:v=>tone(1300,1300,.03,'square',.03*v),
+ ganhou:v=>{tone(880,880,.08,'square',.05*v);tone(1320,1320,.16,'square',.05*v,.07)}};
+const snd=(n,k)=>{const v=vol(k);if(v>0&&SND[n])try{SND[n](v)}catch(e){}};
+/* ---------- partículas próprias (1 Points) ---------- */
+const PN=1600,pP=new Float32Array(PN*3),pC=new Float32Array(PN*4),pV=new Float32Array(PN*3),pL=new Float32Array(PN),pM=new Float32Array(PN),pG=new Float32Array(PN);
+for(let i=0;i<PN;i++)pP[i*3+1]=-999;
+const pGe=new THREE.BufferGeometry();pGe.setAttribute('position',new THREE.BufferAttribute(pP,3));pGe.setAttribute('color',new THREE.BufferAttribute(pC,4));
+const dotT=new THREE.CanvasTexture(cv(64,64,g=>{const r=g.createRadialGradient(32,32,1,32,32,30);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.35,'rgba(255,255,255,.85)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64)}));
+const pts=new THREE.Points(pGe,new THREE.PointsMaterial({size:1.3,map:dotT,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));pts.frustumCulled=false;pts.renderOrder=6;scene.add(pts);
+let pH=0,pN=0;const tcol=new THREE.Color();
+function puff(x,y,z,n,cols,sp,life,up,grav){for(let q=0;q<n;q++){const i=pH;pH=(pH+1)%PN;const a=Math.random()*6.283,e=Math.random()*2-1,c=Math.sqrt(1-e*e),s=sp*(.35+Math.random()*.65);
+ pP[i*3]=x;pP[i*3+1]=y;pP[i*3+2]=z;pV[i*3]=Math.cos(a)*c*s;pV[i*3+1]=e*s*.6+(up||0)*(.5+Math.random()*.5);pV[i*3+2]=Math.sin(a)*c*s;
+ tcol.set(cols[q%cols.length]);pC[i*4]=tcol.r;pC[i*4+1]=tcol.g;pC[i*4+2]=tcol.b;pC[i*4+3]=1;pL[i]=pM[i]=life*(.6+Math.random()*.4);pG[i]=grav||0}pN+=n}
+function stepP(dt){if(pN<=0)return;let al=0;const d=Math.exp(-1.6*dt);for(let i=0;i<PN;i++){if(pL[i]<=0)continue;pL[i]-=dt;if(pL[i]<=0){pP[i*3+1]=-999;pC[i*4+3]=0;continue}al++;
+ pV[i*3+1]-=pG[i]*dt;pV[i*3]*=d;pV[i*3+2]*=d;pP[i*3]+=pV[i*3]*dt;pP[i*3+1]+=pV[i*3+1]*dt;pP[i*3+2]+=pV[i*3+2]*dt;pC[i*4+3]=Math.min(1,pL[i]/pM[i]*1.8)}
+ pN=al;pGe.attributes.position.needsUpdate=true;pGe.attributes.color.needsUpdate=true}
+/* clarão + onda de choque das explosões */
+const flT=new THREE.CanvasTexture(cv(128,128,g=>{const r=g.createRadialGradient(64,64,2,64,64,64);r.addColorStop(0,'rgba(255,255,230,1)');r.addColorStop(.3,'rgba(255,190,70,.9)');r.addColorStop(.7,'rgba(255,90,20,.35)');r.addColorStop(1,'rgba(255,60,0,0)');g.fillStyle=r;g.fillRect(0,0,128,128)}));
+const FX=[];for(let i=0;i<8;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:flT,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));s.visible=false;s.renderOrder=7;scene.add(s);FX.push({s,t:9,c:new THREE.Color()})}
+function boom(x,y,z,cols,big){const f=FX.find(e=>e.t>=.5)||FX[0];f.t=0;f.big=big||1;f.s.position.set(x,y,z);f.s.material.color.set(cols[0]);f.s.visible=true;
+ puff(x,y,z,big?60:40,cols,18*(big||1),.7,7,14);puff(x,y+1,z,14,[0x555566,0x333340],6,1,4,-2)}
+
+/* ---------- modelos dos itens (usados na pista, no kart e nos ícones) ---------- */
+const MK={},hexTex=(c,bg)=>{const t=new THREE.CanvasTexture(cv(256,256,(g,w,h)=>{g.fillStyle=bg;g.fillRect(0,0,w,h);g.strokeStyle=c;g.lineWidth=5;const r=22,hx=r*Math.sqrt(3);
+ for(let y=-1;y<14;y++)for(let x=-1;x<8;x++){const cx=x*hx+(y%2?hx/2:0),cy=y*r*1.5;g.beginPath();for(let k=0;k<6;k++){const a=Math.PI/6+k*Math.PI/3;g.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r)}g.closePath();g.stroke()}}));t.wrapS=t.wrapT=THREE.RepeatWrapping;t.encoding=THREE.sRGBEncoding;return t};
+const boltShape=()=>{const s=new THREE.Shape(),P=[[-.15,1.25],[.62,1.25],[.12,.25],[.6,.25],[-.38,-1.35],[-.02,-.12],[-.5,-.12]];P.forEach((p,i)=>i?s.lineTo(p[0],p[1]):s.moveTo(p[0],p[1]));s.closePath();return s};
+const qTex=(top,bot,qc)=>{const t=new THREE.CanvasTexture(cv(256,256,(g,w,h)=>{const gr=g.createLinearGradient(0,0,w,h);gr.addColorStop(0,top);gr.addColorStop(1,bot);g.fillStyle=gr;g.fillRect(0,0,w,h);
+ g.strokeStyle='rgba(255,255,255,.75)';g.lineWidth=12;g.strokeRect(10,10,w-20,h-20);g.font='400 170px Bungee, Arial Black, sans-serif';g.textAlign='center';g.textBaseline='middle';
+ g.lineWidth=18;g.strokeStyle='#2A1A55';g.strokeText('?',w/2,h/2+12);g.fillStyle=qc;g.fillText('?',w/2,h/2+12)}));t.encoding=THREE.sRGBEncoding;return t};
+MK.foguete=()=>{const g=new THREE.Group(),K=chKit(g),ax=[Math.PI/2,0,0];K.cyl(.44,.44,1.9,chMat(0x2E7BFF,{metalness:.25,roughness:.3}),0,0,0,ax);K.cone(.44,1,0xE8202A,0,0,1.45,ax);
+ K.cyl(.46,.46,.2,0xFFFFFF,0,0,.55,ax);K.ball(.17,chMat(0xBFE8FF,{roughness:.05,metalness:.3}),0,.38,.15);K.cyl(.34,.4,.3,0x2B2F38,0,0,-1.08,ax);
+ [0,1,2,3].forEach(i=>{const a=i/4*Math.PI*2+Math.PI/4;K.box(.08,.75,.75,0xE8202A,Math.cos(a)*.6,Math.sin(a)*.6,-.7,[0,0,a+Math.PI/2])});
+ const fl=K.cone(.36,1.3,chMat(0xFFC040,{emissive:0xFF7A00,emissiveIntensity:1.2}),0,0,-1.85,[-Math.PI/2,0,0]);g.userData.flame=fl;return g};
+MK.gosma=()=>{const g=new THREE.Group(),m=chMat(0x9B4DFF,{emissive:0x4A1490,emissiveIntensity:.35,flatShading:true,roughness:.25});const b=new THREE.Mesh(new THREE.IcosahedronGeometry(.95,1),m);g.add(b);
+ [[.7,-.55,.35,.3],[-.55,-.7,.2,.24],[.1,-.85,-.5,.2],[-.4,.55,.6,.18]].forEach(q=>{const d=new THREE.Mesh(new THREE.IcosahedronGeometry(q[3],0),chMat(0xC48BFF,{emissive:0x5A20A0,emissiveIntensity:.3,flatShading:true}));d.position.set(q[0],q[1],q[2]);g.add(d)});return g};
+MK.espinho=()=>{const g=new THREE.Group(),roll=new THREE.Group();g.add(roll);const body=new THREE.Mesh(new THREE.IcosahedronGeometry(.95,1),chMat(0x7A3BD8,{flatShading:true,roughness:.4}));roll.add(body);
+ const up=new THREE.Vector3(0,1,0),ic=new THREE.IcosahedronGeometry(1,0),pa=ic.attributes.position,seen=new Set();
+ for(let i=0;i<pa.count;i++){const v=new THREE.Vector3().fromBufferAttribute(pa,i).normalize(),k=v.toArray().map(n=>n.toFixed(2)).join();if(seen.has(k))continue;seen.add(k);
+  const c=new THREE.Mesh(chGeo('i2sp',()=>new THREE.ConeGeometry(.24,.7,6)),chMat(0xFF8A1F,{emissive:0x803000,emissiveIntensity:.3}));c.position.copy(v).multiplyScalar(1.12);c.quaternion.setFromUnitVectors(up,v);roll.add(c)}
+ const K=chKit(g);[-1,1].forEach(s=>{K.ball(.3,0xFFFFFF,s*.36,.28,.82,[1,1.1,.6]);K.ball(.14,0x101018,s*.33,.25,1.0,[1,1.1,.5]);K.box(.4,.09,.1,0x2A1050,s*.36,.62,.86,[0,0,-s*.35])});
+ K.tor(.2,.05,0x2A1050,0,-.18,.92,[0,0,0],Math.PI);g.userData.roll=roll;return g};
+MK.escudo=()=>{const g=new THREE.Group(),hx=hexTex('rgba(200,240,255,.9)','#1E6FE0');hx.repeat.set(1.5,1.5);
+ const a=new THREE.Mesh(new THREE.CylinderGeometry(1.15,1.15,.3,6),[chMat(0x1E5FC8,{metalness:.5,roughness:.3}),new THREE.MeshStandardMaterial({map:hx,emissive:C2(0x2E9BFF),emissiveIntensity:.55,emissiveMap:hx,roughness:.3}),chMat(0x1E5FC8)]);
+ a.rotation.x=Math.PI/2;a.rotation.y=Math.PI/6;g.add(a);const r=new THREE.Mesh(new THREE.TorusGeometry(1.15,.09,6,6),chMat(0x9FE0FF,{emissive:0x5FC8FF,emissiveIntensity:.9}));r.rotation.z=Math.PI/6;r.position.z=.17;g.add(r);
+ const c=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,.34,6),chMat(0xDFF6FF,{emissive:0x8FD8FF,emissiveIntensity:.8}));c.rotation.x=Math.PI/2;c.rotation.y=Math.PI/6;c.position.z=.06;g.add(c);return g};
+MK.bolha=()=>{const g=new THREE.Group(),hx=hexTex('rgba(230,255,240,1)','rgba(60,215,140,1)');hx.repeat.set(1.6,1);
+ const s=new THREE.Mesh(new THREE.SphereGeometry(1.1,32,20),new THREE.MeshStandardMaterial({map:hx,color:C2(0xC8FFE2),emissive:C2(0x3DDC97),emissiveIntensity:.75,transparent:true,opacity:.62,roughness:.05,metalness:.1}));g.add(s);
+ const h=new THREE.Mesh(new THREE.SphereGeometry(.28,12,8),new THREE.MeshBasicMaterial({color:0xFFFFFF,transparent:true,opacity:.85}));h.scale.set(1,.55,.3);h.position.set(-.45,.55,.85);h.rotation.z=.6;g.add(h);return g};
+MK.raio=()=>{const g=new THREE.Group(),e=new THREE.ExtrudeGeometry(boltShape(),{depth:.3,bevelEnabled:true,bevelThickness:.07,bevelSize:.06,bevelSegments:2});e.center();
+ g.add(new THREE.Mesh(e,chMat(0xFFD43B,{emissive:0xFFA000,emissiveIntensity:.55,roughness:.3})));const o=new THREE.Mesh(e,chMat(0xFF7A00,{emissive:0xC04000,emissiveIntensity:.4}));o.scale.set(1.14,1.08,.6);o.position.z=-.12;g.add(o);return g};
+MK.nitro=()=>{const g=new THREE.Group(),K=chKit(g);K.cyl(.58,.58,1.55,chMat(0x2FD38A,{emissive:0x0A6A3A,emissiveIntensity:.35,roughness:.3,metalness:.2}),0,0,0);
+ K.cyl(.6,.6,.18,0x1E2A30,0,.7,0);K.cyl(.6,.6,.18,0x1E2A30,0,-.7,0);K.cyl(.22,.22,.22,chMat(0xC9CED6,{metalness:.7,roughness:.2}),0,.88,0);
+ const e=new THREE.ExtrudeGeometry(boltShape(),{depth:.1,bevelEnabled:false});e.center();const b=new THREE.Mesh(e,chMat(0xFFE14A,{emissive:0xFFA000,emissiveIntensity:.7}));b.scale.setScalar(.36);b.position.z=.6;g.add(b);
+ const b2=b.clone();b2.position.z=-.6;b2.rotation.y=Math.PI;g.add(b2);return g};
+MK.ima=()=>{const g=new THREE.Group(),K=chKit(g),bl=chMat(0x3F6BFF,{roughness:.3,metalness:.25}),li=chMat(0xB98CFF,{roughness:.3,metalness:.25}),si=chMat(0xE6EBF2,{metalness:.7,roughness:.2});
+ const t=new THREE.Mesh(new THREE.TorusGeometry(.62,.26,12,24,Math.PI),bl);t.rotation.z=Math.PI;g.add(t);K.cyl(.26,.26,.6,bl,-.62,.3,0);K.cyl(.26,.26,.6,li,.62,.3,0);K.cyl(.27,.27,.3,si,-.62,.75,0);K.cyl(.27,.27,.3,si,.62,.75,0);
+ const cm=chMat(0xFFC21A,{metalness:.6,roughness:.3,emissive:0x664400,emissiveIntensity:.5});[[-.9,1.35],[.95,1.25]].forEach((p,i)=>{const c=new THREE.Mesh(chGeo('i2coin',()=>new THREE.CylinderGeometry(.3,.3,.08,18)),cm);c.position.set(p[0],p[1],0);c.rotation.set(Math.PI/2,0,i?.5:-.4);g.add(c)});
+ g.userData.coins=g.children.slice(-2);return g};
+MK.fantasma=()=>{const g=new THREE.Group(),K=chKit(g),w=chMat(0xF4F7FF,{emissive:0x8FA8FF,emissiveIntensity:.3,roughness:.4});K.ball(.8,w,0,.35,0,[1,1.05,1]);
+ const b=new THREE.Mesh(new THREE.CylinderGeometry(.8,.92,.8,20,1,true),w);b.position.y=-.1;g.add(b);for(let i=0;i<6;i++){const a=i/6*Math.PI*2;K.ball(.24,w,Math.cos(a)*.78,-.52,Math.sin(a)*.78)}
+ [-1,1].forEach(s=>{K.ball(.15,0x14141E,s*.28,.48,.7,[1,1.4,.6]);K.ball(.12,0xFF9EC0,s*.48,.22,.6,[1,.6,.4]);K.ball(.2,w,s*.86,0,.1)});K.tor(.16,.04,0x14141E,0,.18,.76,[0,0,Math.PI],Math.PI);return g};
+MK.surpresa=()=>{const g=new THREE.Group(),t=qTex('#B46BFF','#5A1EB8','#FFD43B'),m=new THREE.MeshStandardMaterial({map:t,roughness:.4,emissive:C2(0x3A0F80),emissiveIntensity:.25});
+ g.add(new THREE.Mesh(new THREE.BoxGeometry(1.5,1.5,1.5),m));const gd=chMat(0xFFC21A,{metalness:.6,roughness:.3});
+ for(const a of[-1,1])for(const b of[-1,1]){[[.08,1.56,.08,a*.75,0,b*.75],[1.56,.08,.08,0,a*.75,b*.75],[.08,.08,1.56,a*.75,b*.75,0]].forEach(q=>{const e=new THREE.Mesh(chGeo('i2e'+q.slice(0,3),()=>new THREE.BoxGeometry(q[0],q[1],q[2])),gd);e.position.set(q[3],q[4],q[5]);g.add(e)})}return g};
+
+/* ---------- caixa "?" da pista: dourada, "?" em relevo, parafusos nos cantos ---------- */
+function caixaQ(){const g=BOXTEX.image.getContext('2d'),w=BOXTEX.image.width,h=BOXTEX.image.height;g.clearRect(0,0,w,h);
+ const gr=g.createLinearGradient(0,0,w,h);gr.addColorStop(0,'#FFE680');gr.addColorStop(.45,'#FFB21F');gr.addColorStop(1,'#E06A10');g.fillStyle=gr;g.fillRect(0,0,w,h);
+ g.fillStyle='rgba(255,255,255,.18)';g.beginPath();g.moveTo(0,0);g.lineTo(w*.6,0);g.lineTo(0,h*.6);g.fill();
+ g.strokeStyle='#7A3A08';g.lineWidth=w*.07;g.strokeRect(w*.035,h*.035,w*.93,h*.93);g.strokeStyle='#FFF1B8';g.lineWidth=w*.025;g.strokeRect(w*.09,h*.09,w*.82,h*.82);
+ [[.16,.16],[.84,.16],[.16,.84],[.84,.84]].forEach(([x,y])=>{const r=w*.055,rg=g.createRadialGradient(x*w-r*.3,y*h-r*.3,1,x*w,y*h,r);rg.addColorStop(0,'#FFFFFF');rg.addColorStop(.5,'#C9CED6');rg.addColorStop(1,'#6A6F78');
+  g.fillStyle=rg;g.beginPath();g.arc(x*w,y*h,r,0,7);g.fill();g.strokeStyle='#4A4F58';g.lineWidth=w*.012;g.beginPath();g.moveTo(x*w-r*.6,y*h);g.lineTo(x*w+r*.6,y*h);g.stroke()});
+ g.font='400 '+Math.round(w*.62)+'px Bungee, Arial Black, sans-serif';g.textAlign='center';g.textBaseline='middle';
+ g.fillStyle='rgba(90,40,0,.55)';g.fillText('?',w/2+w*.03,h/2+h*.09);g.lineWidth=w*.08;g.strokeStyle='#5A2A00';g.strokeText('?',w/2,h/2+h*.06);
+ const qg=g.createLinearGradient(0,h*.2,0,h*.85);qg.addColorStop(0,'#FFFFFF');qg.addColorStop(1,'#FFE27A');g.fillStyle=qg;g.fillText('?',w/2,h/2+h*.06);BOXTEX.needsUpdate=true}
+/* o "?" usa a fonte Bungee: redesenha quando ela termina de carregar */
+caixaQ();try{document.fonts&&document.fonts.ready.then(caixaQ)}catch(e){}
+
+/* ---------- registro dos itens ---------- */
+const NOVOS=['foguete','gosma','espinho','escudo','bolha','raio','nitro','ima','fantasma','surpresa'];
+const traseira=(k,d)=>({x:k.x-Math.sin(k.h)*(d||3.2),z:k.z-Math.cos(k.h)*(d||3.2)});
+function aheadOf(k){let tg=null,bd=1e9;karts.forEach(o=>{if(o===k||o.fin||o.fallT>0)return;const d=o.prog-k.prog;if(d>0&&d<bd){bd=d;tg=o}});return tg}
+function noTrilho(px,pz,idx){let j=idx,bd=1e9;for(let o=-20;o<=6;o++){const i=(idx+o+N)%N,dx=px-SP[i].x,dz=pz-SP[i].z,d=dx*dx+dz*dz;if(d<bd){bd=d;j=i}}
+ const lat=clamp((px-SP[j].x)*RT[j].x+(pz-SP[j].z)*RT[j].z,-(W/2-3),W/2-3);const q=gapOf(j);if(q)j=((q.t<q.g.a-q.g.r0?q.g.r0-3:q.g.b+2)%N+N)%N;
+ return{j,lat,x:SP[j].x+RT[j].x*lat,z:SP[j].z+RT[j].z*lat}}
+Object.assign(ITEMS,{
+ roleta:{ico:'🎰',nm:'SORTEANDO…',use(){}},
+ foguete:{ico:'🚀',nm:'MINI FOGUETE',use(k){const tg=aheadOf(k),m=MK.foguete();m.scale.setScalar(1.25);scene.add(m);
+  I2.rk.push({m,x:k.x+Math.sin(k.h)*4,z:k.z+Math.cos(k.h)*4,y:1.7+Math.max(0,k.gy),fi:k.fi+2,lat:k.lat,tg,own:k,t:tg?6:3.5,px:null,pz:null});
+  say(k,tg?'🚀 FOGUETE ATRÁS DE '+tg.name+'!':'🚀 FOGUETE LANÇADO!','#6FB6FF');snd('foguete',k);if(tg&&tg.human)say(tg,'⚠ FOGUETE VINDO!','#FF8A3D')}},
+ gosma:{ico:'🟣',nm:'GOSMA MALUCA',use(k){const b=traseira(k,10),p=noTrilho(b.x,b.z,k.idx),m=MK.gosma();m.scale.setScalar(.9);scene.add(m);
+  I2.fly.push({m,x0:k.x-Math.sin(k.h)*2.5,z0:k.z-Math.cos(k.h)*2.5,y0:2.6+Math.max(0,k.gy),x1:p.x,z1:p.z,t:0,T:.45,own:k});say(k,'🟣 GOSMA NA PISTA!','#C48BFF');snd('gosma',k)}},
+ espinho:{ico:'🦔',nm:'BOLA ESPINHOSA',use(k){const m=MK.espinho();m.scale.setScalar(1.25);scene.add(m);
+  I2.sb.push({m,fi:k.fi+3,lat:clamp(k.lat,-(W/2-4),W/2-4),own:k,t:8,imm:.6,hit:new Set(),x:k.x,z:k.z,vl:0});say(k,'🦔 BOLA ESPINHOSA ROLANDO!','#FF8A3D');snd('espinho',k)}},
+ escudo:{ico:'🛡️',nm:'ESCUDO',use(k){k.i2Sh=20;say(k,'🛡️ ESCUDO DE ENERGIA! BLOQUEIA 1 ATAQUE','#6FB6FF');snd('escudo',k)}},
+ bolha:{ico:'🫧',nm:'BOLHA PROTETORA',use(k){k.i2Bu=6;say(k,'🫧 BOLHA PROTETORA! 6s','#47D7A0');snd('bolha',k)}},
+ raio:{ico:'⚡',nm:'RAIO TURBO',use(k){k.boost=Math.max(k.boost,1.5);k.i2Tr={c:[0xFFF27A,0xFFD43B,0xFFFFFF],t:1.5};k.shake=Math.max(k.shake||0,.35);say(k,'⚡ RAIO TURBO!','#FFD43B');snd('raio',k)}},
+ nitro:{ico:'🔋',nm:'NITRO',use(k){k.boost=Math.max(k.boost,3.4);k.i2Tr={c:[0x6BFFB8,0x2FD38A,0xD8FFE8],t:3.4,big:1};k.shake=Math.max(k.shake||0,.5);say(k,'🔋 NITRO! SEGURA!','#47D7A0');snd('nitro',k)}},
+ ima:{ico:'🧲',nm:'ÍMÃ DE MOEDAS',use(k){k.i2Im=7;say(k,'🧲 ÍMÃ LIGADO! PUXANDO MOEDAS','#9BB4FF');snd('ima',k)}},
+ fantasma:{ico:'👻',nm:'FANTASMA',use(k){k.i2Gh=5;say(k,'👻 MODO FANTASMA! 5s','#CFE6FF');snd('fantasma',k)}},
+ surpresa:{ico:'🎁',nm:'CAIXA SURPRESA',use(k){boom(k.x,k.y+3,k.z,[0xB46BFF,0xFFD43B,0x47D7A0,0xFF6FC8,0x6FB6FF],.7);k.i2Pend=sorteia(k,true);k.i2Roll=k.human?1.1:.6;k.item='roleta';say(k,'🎁 SURPRESA!','#C48BFF');snd('surpresa',k)}}});
+/* sorteio pela posição: pesos [líder, meio, último] — ataque quase nunca para o 1º */
+const PESO={foguete:[5,22,18],gosma:[26,14,6],espinho:[0,6,12],escudo:[24,14,7],bolha:[2,6,10],raio:[30,22,14],nitro:[3,14,24],ima:[10,12,8],fantasma:[0,5,9],surpresa:[8,10,10]};
+function sorteia(k,semSurpresa){const n=karts.length||1,pl=placeOf(k);let r=n>1?clamp((pl-1)/(n-1),0,1):0;if(pl>1&&karts.length)r=Math.max(r,clamp((leaderProg()-k.prog)/(N*.5),0,1));
+ let tot=0;const w=NOVOS.map(id=>{const a=PESO[id];let v=r<.5?a[0]+(a[1]-a[0])*r*2:a[1]+(a[2]-a[1])*(r-.5)*2;
+  if(id==='surpresa'&&semSurpresa)v=0;if(id==='ima'&&(k.coins||0)>=8)v*=.15;if(id==='foguete'&&pl===1)v*=.5;tot+=v;return v});
+ let x=Math.random()*tot;for(let i=0;i<NOVOS.length;i++){x-=w[i];if(x<0)return NOVOS[i]}return 'raio'}
+rollItem=k=>{k.i2Pend=sorteia(k);k.i2Roll=k.human?1.2:.7;return 'roleta'};
+{const _u=useItem;useItem=function(k){if(k.item==='roleta')return;_u(k)}}
+/* proteção: bolha (tudo, 6 s) > fantasma (atravessa) > escudo (1 golpe) */
+on('protect',(k,o)=>{if(k.i2Bu>0){puff(k.x,k.y+2.4,k.z,20,[0x7DFFB8,0xFFFFFF],12,.5,3,6);snd('bloqueio',k);return true}
+ if(k.i2Gh>0)return true;
+ if(k.i2Sh>0){k.i2Sh=0;boom(k.x,k.y+2.2,k.z,[0x6FB6FF,0xFFFFFF,0x2E9BFF],.6);snd('bloqueio',k);say(k,'🛡️ O ESCUDO SEGUROU O GOLPE!','#6FB6FF');if(o&&o.src&&o.src!==k)say(o.src,'🛡️ '+k.name+' ESTAVA COM ESCUDO!','#C9D3F5');return true}return false});
+
+/* ---------- escudo e bolha em volta do kart (shader de hexágonos) ---------- */
+const hexMat=(col)=>new THREE.ShaderMaterial({uniforms:{uT:{value:0},uO:{value:1},uC:{value:new THREE.Color(col)}},transparent:true,depthWrite:false,
+ vertexShader:'varying vec3 vN;varying vec3 vV;varying vec2 vU;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);vN=normalize(normalMatrix*normal);vV=normalize(-mv.xyz);vU=uv;gl_Position=projectionMatrix*mv;}',
+ fragmentShader:'uniform float uT;uniform float uO;uniform vec3 uC;varying vec3 vN;varying vec3 vV;varying vec2 vU;'+
+  'float hx(vec2 p){p=abs(p);return max(dot(p,normalize(vec2(1.,1.7320508))),p.x);}'+
+  'void main(){float f=1.-abs(dot(normalize(vN),normalize(vV)));f=f*f;vec2 p=vU*vec2(18.,9.);vec2 s=vec2(1.,1.7320508);vec2 a=mod(p,s)-s*.5;vec2 b=mod(p-s*.5,s)-s*.5;vec2 g=dot(a,a)<dot(b,b)?a:b;'+
+  'float e=smoothstep(.40,.49,hx(g));float w=.5+.5*sin(uT*4.-vU.y*12.);vec3 c=mix(uC,vec3(1.),f*.6+e*.35);gl_FragColor=vec4(c,clamp((.08+f*.75+e*(.3+.3*w))*uO,0.,.95));}'});
+const shG=new THREE.SphereGeometry(1,40,24);
+function aura(k,key,col){if(!k[key]){const m=new THREE.Mesh(shG,hexMat(col));m.userData.i2fx=1;m.renderOrder=4;k.g.add(m);k[key]=m}return k[key]}
+/* fantasma: troca o material das peças por um translúcido (e devolve depois) */
+const ghM=new THREE.MeshStandardMaterial({color:C2(0xCFE6FF),emissive:C2(0x6FA8FF),emissiveIntensity:.45,transparent:true,opacity:.32,depthWrite:false,roughness:.3});
+function ghostPaint(k,on){if(on){if(!k.i2Orig){k.i2Orig=[];k.g.traverse(c=>{if(c.isMesh&&!c.userData.i2fx&&c!==k.fire)k.i2Orig.push([c,c.material])})}k.i2Orig.forEach(a=>a[0].material=ghM)}
+ else if(k.i2Orig){k.i2Orig.forEach(a=>a[0].material=a[1]);k.i2Orig=null}}
+/* enfeite que flutua em cima do kart (ímã, fantasminha) */
+function topper(k,key,id){if(!k[key]){const m=MK[id]();m.scale.setScalar(.9);m.traverse(c=>{if(c.isMesh)c.userData.i2fx=1});m.userData.i2fx=1;k.g.add(m);k[key]=m}return k[key]}
+/* moeda voando até o kart (ímã) */
+const coinM2=new THREE.MeshStandardMaterial({color:C2(0xFFC21A),metalness:.6,roughness:.3,emissive:C2(0x664400),emissiveIntensity:.6});const coinG2=new THREE.CylinderGeometry(1,1,.3,16);coinG2.rotateX(Math.PI/2);
+const CF=[];for(let i=0;i<14;i++){const m=new THREE.Mesh(coinG2,coinM2);m.visible=false;scene.add(m);CF.push({m,t:9})}
+
+/* ---------- a cada passo ---------- */
+function limpa(){[...I2.rk,...I2.sb,...I2.goo,...I2.fly].forEach(o=>scene.remove(o.m));I2.rk.length=I2.sb.length=I2.goo.length=I2.fly.length=0;CF.forEach(c=>{c.t=9;c.m.visible=false});
+ FX.forEach(f=>{f.t=9;f.s.visible=false});for(let i=0;i<PN;i++){pL[i]=0;pP[i*3+1]=-999;pC[i*4+3]=0}pN=0;pGe.attributes.position.needsUpdate=pGe.attributes.color.needsUpdate=true;
+ karts.forEach(k=>{k.i2Sh=k.i2Bu=k.i2Gh=k.i2Im=k.i2Roll=0;k.i2Tr=null;ghostPaint(k,false);['i2ShM','i2BuM','i2ImM','i2GhM'].forEach(q=>{if(k[q])k[q].visible=false})})}
+on('start',limpa);on('stage',limpa);on('finish',limpa);
+on('update',dt=>{
+ for(const k of karts){
+  if(k.i2Roll>0){k.i2Roll-=dt;if(k.i2Roll<=0&&k.item==='roleta'){k.item=k.i2Pend||'raio';if(k.human)snd('ganhou',k)}}
+  if(k.i2Sh>0)k.i2Sh=Math.max(0,k.i2Sh-dt);if(k.i2Bu>0)k.i2Bu=Math.max(0,k.i2Bu-dt);if(k.i2Im>0)k.i2Im=Math.max(0,k.i2Im-dt);
+  if(k.i2Gh>0){k.i2Gh=Math.max(0,k.i2Gh-dt);k.ghost=Math.max(k.ghost,Math.min(k.i2Gh,.2))}
+  if(k.i2Tr){k.i2Tr.t-=dt;if(k.i2Tr.t<=0||k.fallT>0)k.i2Tr=null}
+  /* ímã: puxa as moedas num raio de 30 */
+  if(k.i2Im>0&&ST.pv&&k.fallT<=0)for(const c of ST.pv.coins){if(c.cd>0||(k.coins||0)>=10)continue;const dx=c.x-k.x,dz=c.z-k.z;if(dx*dx+dz*dz<900){c.cd=8;k.coins=(k.coins||0)+1;
+   const f=CF.find(q=>q.t>=1);if(f){f.t=0;f.x=c.x;f.z=c.z;f.k=k;f.m.visible=true}if(k.human)tone(1200+k.coins*60,1200+k.coins*60,.07,'square',.04)}}}
+ /* foguetes: andam pela pista (2× a velocidade de referência) e no fim vão direto no alvo */
+ for(let i=I2.rk.length-1;i>=0;i--){const s=I2.rk[i];s.t-=dt;const tg=s.tg&&s.tg.fallT<=0&&!s.tg.fin?s.tg:null;
+  if(tg&&Math.hypot(tg.x-s.x,tg.z-s.z)<24){const d=Math.atan2(tg.x-s.x,tg.z-s.z);s.x+=Math.sin(d)*200*dt;s.z+=Math.cos(d)*200*dt}
+  else{s.fi+=200*dt/SEG;const j=((Math.floor(s.fi)%N)+N)%N,tl=tg?clamp(tg.lat,-(W/2-2),W/2-2):s.lat;s.lat+=clamp(tl-s.lat,-30*dt,30*dt);s.x=SP[j].x+RT[j].x*s.lat;s.z=SP[j].z+RT[j].z*s.lat}
+  let hit=null;karts.forEach(o=>{if(o!==s.own&&o.fallT<=0&&Math.abs(o.y-s.y)<4&&Math.hypot(o.x-s.x,o.z-s.z)<3.8)hit=o});
+  if(hit){boom(s.x,s.y,s.z,[0xFFD08A,0xFF7A00,0xFF3A1A]);snd('boom',hit.human?hit:s.own);if(hitKart(hit,{spin:1.2,vmul:.3,msg:'🚀 ATINGIDO PELO FOGUETE!',src:s.own,kind:'foguete',rb:1})){say(s.own,'🎯 ACERTOU '+hit.name+'!','#47D7A0');hit.shake=1.2}}
+  if(hit||s.t<=0){if(!hit)boom(s.x,s.y,s.z,[0xFFD08A,0xFF7A00],.5);scene.remove(s.m);I2.rk.splice(i,1)}}
+ /* bola espinhosa: rola pela pista na faixa onde foi lançada, derruba todos que encontrar */
+ for(let i=I2.sb.length-1;i>=0;i--){const b=I2.sb[i];b.t-=dt;b.imm-=dt;b.fi+=95*dt/SEG;const j=((Math.floor(b.fi)%N)+N)%N;
+  /* mira de leve no kart mais perto à frente (até 70 m) */
+  let alvo=null,ad=1e9;for(const o of karts){if(o===b.own||b.hit.has(o)||o.fallT>0)continue;const d=ixd(Math.floor(o.fi),Math.floor(b.fi))*SEG;if(d<70&&d<ad){ad=d;alvo=o}}
+  if(alvo)b.lat+=clamp(alvo.lat-b.lat,-9*dt,9*dt);const lat=clamp(b.lat+Math.sin(b.t*2.2)*2.5,-(W/2-3),W/2-3);b.x=SP[j].x+RT[j].x*lat;b.z=SP[j].z+RT[j].z*lat;
+  for(const o of karts){if(b.hit.has(o)||(o===b.own&&b.imm>0)||o.fallT>0||Math.abs(o.y)>3||Math.hypot(o.x-b.x,o.z-b.z)>4.8)continue;b.hit.add(o);
+   if(hitKart(o,{spin:1.3,vmul:.25,msg:'🦔 ATROPELADO PELA BOLA ESPINHOSA!',src:b.own,kind:'espinho',rb:1})){boom(o.x,o.y+1.5,o.z,[0xFF8A1F,0xB46BFF,0xFFFFFF],.6);snd('espinho',o);if(b.own!==o)say(b.own,'🦔 DERRUBOU '+o.name+'!','#47D7A0')}}
+  if(b.t<=0){boom(b.x,1.6,b.z,[0xB46BFF,0xFF8A1F],.6);scene.remove(b.m);I2.sb.splice(i,1)}}
+ /* gosma em voo → vira poça */
+ for(let i=I2.fly.length-1;i>=0;i--){const f=I2.fly[i];f.t+=dt;if(f.t>=f.T){scene.remove(f.m);I2.fly.splice(i,1);poca(f.x1,f.z1,f.own);continue}}
+ for(let i=I2.goo.length-1;i>=0;i--){const o=I2.goo[i];o.t-=dt;o.imm-=dt;
+  if(o.t>0)for(const k of karts){if(k.air||k.fallT>0||(k.i2GoCd||0)>raceT||Math.abs(k.y)>1.2||(k===o.own&&o.imm>0))continue;const dx=k.x-o.x,dz=k.z-o.z;
+   if(dx*dx+dz*dz<o.r*o.r){k.i2GoCd=raceT+1.4;if(hitKart(k,{spin:.85,vmul:.55,msg:'🟣 ESCORREGOU NA GOSMA!',kind:'gosma',src:o.own})){snd('gosma',k);puff(k.x,.8,k.z,16,[0xB46BFF,0x7A3BD8,0xE0C0FF],9,.5,5,16);if(o.own&&o.own!==k)say(o.own,'🟣 '+k.name+' ESCORREGOU!','#47D7A0')}}}
+  if(o.t<=0){scene.remove(o.m);I2.goo.splice(i,1)}}});
+const gooT=new THREE.CanvasTexture(cv(256,256,(g,w,h)=>{const bl=(x,y,r)=>{g.beginPath();g.arc(x,y,r,0,7);g.fill()};g.fillStyle='#6A22C8';bl(128,128,74);
+ for(let i=0;i<12;i++){const a=i/12*6.283+Math.random()*.3,d=50+Math.random()*28;bl(128+Math.cos(a)*d,128+Math.sin(a)*d,18+Math.random()*22)}for(let i=0;i<8;i++){const a=Math.random()*6.283,d=104+Math.random()*14;bl(128+Math.cos(a)*d,128+Math.sin(a)*d,4+Math.random()*7)}
+ g.globalCompositeOperation='source-atop';const gr=g.createRadialGradient(110,105,10,128,128,120);gr.addColorStop(0,'rgba(220,170,255,.9)');gr.addColorStop(.5,'rgba(150,70,240,.3)');gr.addColorStop(1,'rgba(60,10,120,.5)');g.fillStyle=gr;g.fillRect(0,0,w,h);
+ g.fillStyle='rgba(255,255,255,.85)';[[96,92,16,6],[150,140,10,4],[120,170,7,3],[170,98,6,3]].forEach(a=>{g.beginPath();g.ellipse(a[0],a[1],a[2],a[3],-.5,0,7);g.fill()})}));gooT.encoding=THREE.sRGBEncoding;
+const gooM=new THREE.MeshStandardMaterial({map:gooT,emissiveMap:gooT,emissive:0xFFFFFF,emissiveIntensity:.35,transparent:true,depthWrite:false,roughness:.15,metalness:.2,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+const gooG=new THREE.PlaneGeometry(8,8);gooG.rotateX(-Math.PI/2);
+function poca(x,z,own){const m=new THREE.Mesh(gooG,gooM);m.position.set(x,.12,z);m.rotation.y=Math.random()*6.28;m.scale.setScalar(.15);m.renderOrder=1;scene.add(m);
+ I2.goo.push({x,z,m,t:14,own,imm:1,r:3.3,b:0});if(I2.goo.length>10){const o=I2.goo.shift();scene.remove(o.m)}puff(x,.8,z,26,[0xB46BFF,0x7A3BD8,0xE0C0FF],12,.6,6,16);tone(160,70,.25,'sine',.1*vol(own))}
+
+/* ---------- a cada frame: animações e efeitos ---------- */
+on('visuals',dt=>{
+ for(const s of I2.rk){s.m.position.set(s.x,s.y,s.z);if(s.px!=null&&(s.x!==s.px||s.z!==s.pz))s.m.rotation.y=Math.atan2(s.x-s.px,s.z-s.pz);s.px=s.x;s.pz=s.z;s.m.rotation.z+=dt*6;
+  const fl=s.m.userData.flame;if(fl)fl.scale.setScalar(.8+Math.random()*.5);const bx=s.x-Math.sin(s.m.rotation.y)*2.6,bz=s.z-Math.cos(s.m.rotation.y)*2.6;puff(bx,s.y,bz,2,[0xFFD08A,0xFF7A00,0xFFFFFF],2,.35,1,0)}
+ for(const b of I2.sb){b.m.position.set(b.x,1.25+Math.abs(Math.sin(b.t*9))*.35,b.z);const j=((Math.floor(b.fi)%N)+N)%N;b.m.rotation.y=Math.atan2(TG[j].x,TG[j].z);if(b.m.userData.roll)b.m.userData.roll.rotation.x+=dt*14;
+  if(Math.random()<dt*20)puff(b.x,.5,b.z,1,[0xC9B89A,0xFFFFFF],4,.4,3,6)}
+ for(const f of I2.fly){const u=Math.min(1,f.t/f.T);f.m.position.set(f.x0+(f.x1-f.x0)*u,f.y0*(1-u)+.6*u+Math.sin(u*Math.PI)*3.2,f.z0+(f.z1-f.z0)*u);f.m.rotation.x+=dt*8;f.m.rotation.z+=dt*5}
+ for(const o of I2.goo){o.b+=dt;o.m.scale.setScalar(o.t<1?Math.max(.05,o.t):Math.min(1,o.m.scale.x+dt*5));if(Math.random()<dt*2.5)puff(o.x+(Math.random()-.5)*5,.4,o.z+(Math.random()-.5)*5,1,[0xC48BFF,0xFFFFFF],1.5,.6,2.5,0)}
+ for(const f of FX){if(f.t>=.5)continue;f.t+=dt;const u=f.t/.5;f.s.scale.setScalar((6+u*18)*f.big);f.s.material.opacity=1-u;if(u>=1)f.s.visible=false}
+ for(const c of CF){if(c.t>=1)continue;c.t+=dt/.35;const k=c.k,u=Math.min(1,c.t);c.m.position.set(c.x+(k.x-c.x)*u,1.6+Math.sin(u*Math.PI)*3+k.y,c.z+(k.z-c.z)*u);c.m.rotation.y+=dt*14;c.m.scale.setScalar(1-u*.6);if(u>=1)c.m.visible=false}
+ for(const k of karts){
+  const sh=k.i2Sh>0&&!(k.i2Sh<2&&Math.floor(tm*8)%2),bu=k.i2Bu>0&&!(k.i2Bu<1.3&&Math.floor(tm*8)%2);
+  if(sh||k.i2ShM){const m=aura(k,'i2ShM',0x2E9BFF);m.visible=sh;if(sh){m.scale.set(3.6,3,5.4);m.position.set(0,2,.3);m.material.uniforms.uT.value=tm}}
+  if(bu||k.i2BuM){const m=aura(k,'i2BuM',0x3DDC97);m.visible=bu;if(bu){const w=1+Math.sin(tm*6)*.04;m.scale.set(4.4*w,3.8/w,6.2*w);m.position.set(0,2.2,.3);m.material.uniforms.uT.value=tm}}
+  if(k.i2Im>0||k.i2ImM){const m=topper(k,'i2ImM','ima');m.visible=k.i2Im>0;if(m.visible){m.position.set(0,6.2+Math.sin(tm*4)*.25,0);m.rotation.y=tm*3;if(Math.random()<dt*14)puff(k.x+(Math.random()-.5)*8,k.y+1.5,k.z+(Math.random()-.5)*8,1,[0x9BB4FF,0xB98CFF],3,.4,2,0)}}
+  const gh=k.i2Gh>0;if(gh!==!!k.i2Orig)ghostPaint(k,gh);if(gh){k.g.visible=true;if(k.i2Gh<1.2&&Math.floor(tm*8)%2)ghostPaint(k,false);if(Math.random()<dt*10)puff(k.x+(Math.random()-.5)*4,k.y+1+Math.random()*2,k.z+(Math.random()-.5)*5,1,[0xCFE6FF,0xFFFFFF],2,.6,2,-1)}
+  if(gh||k.i2GhM){const m=topper(k,'i2GhM','fantasma');m.visible=gh;if(gh){m.position.set(Math.sin(tm*2)*.6,6+Math.sin(tm*3)*.3,0);m.rotation.y=Math.sin(tm*1.5)*.6}}
+  if(k.i2Tr&&k.boost>0&&k.fallT<=0){const r=traseira(k,3.4),n=k.i2Tr.big?3:2;puff(r.x+(Math.random()-.5)*1.5,k.y+1+Math.random()*.6,r.z+(Math.random()-.5)*1.5,n,k.i2Tr.c,k.i2Tr.big?5:3,.35,1.5,0)}}
+ stepP(dt)});
+
+/* ---------- robôs: estratégia com os itens novos (embrulha botInput, só troca o 'item') ---------- */
+const aheadD=k=>{let b=1e9;karts.forEach(o=>{const d=o.prog-k.prog;if(o!==k&&!o.fin&&o.fallT<=0&&d>0&&d<b)b=d});return b};
+const behindN=(k,n)=>karts.some(o=>{const d=k.prog-o.prog;return o!==k&&o.fallT<=0&&!o.fin&&d>1&&d<n});
+const reto=(k,n)=>{const a0=TG[k.idx],a1=TG[(k.idx+n)%N],a2=TG[(k.idx+Math.floor(n/2))%N],an=v=>Math.atan2(v.x,v.z);return Math.abs(wrap(an(a1)-an(a0)))<.3&&Math.abs(wrap(an(a2)-an(a0)))<.3};
+const ameaca=k=>I2.rk.some(r=>r.tg===k&&Math.hypot(r.x-k.x,r.z-k.z)<90)||I2.sb.some(b=>!b.hit.has(k)&&b.own!==k&&ixd(Math.floor(k.fi),Math.floor(b.fi))*SEG<45&&Math.abs(b.lat-k.lat)<10);
+const moedasPerto=k=>{const P=ST.pv;if(!P)return 0;let n=0;for(const c of P.coins)if(c.cd<=0&&(c.x-k.x)**2+(c.z-k.z)**2<1600)n++;return n};
+function botItem2(k,dt){const it=k.item;if(!it||it==='roleta'){k.i2L=null;return false}if(k.fin||state!=='go'||k.fallT>0)return false;
+ if(k.i2L!==it){k.i2L=it;k.i2H=0;k.i2W=.4+Math.random()*1.1}k.i2H+=dt;const H=k.i2H;
+ if((it==='escudo'||it==='bolha'||it==='fantasma')&&ameaca(k))return true;if(H<k.i2W)return false;
+ switch(it){case 'foguete':return aheadD(k)<N*.12||H>9;
+  case 'espinho':return(aheadD(k)<N*.22&&reto(k,24))||H>10;
+  case 'gosma':return !k.air&&!nearGap(k.idx/N,4)&&(behindN(k,30)||H>14);
+  case 'escudo':return(placeOf(k)===1&&behindN(k,24)&&H>5)||H>18;
+  case 'bolha':return(behindN(k,18)&&H>3)||H>12;
+  case 'fantasma':return H>9;
+  case 'raio':return !k.air&&(reto(k,30)||H>4);
+  case 'nitro':return !k.air&&!gapAhead(k.idx,Math.ceil(30/SEG))&&(reto(k,60)||H>7);
+  case 'ima':return moedasPerto(k)>=2||H>6;
+  case 'surpresa':return H>1;default:return H>3}}
+{const _bi=botInput;botInput=function(k,dt){const r=_bi(k,dt);if(r)r.item=botItem2(k,dt);return r}}
+
+/* ---------- ícones 3D dos itens (gerados uma vez; usados no HUD e na roleta) ---------- */
+function genIcons(){const snap=window.RMENU&&window.RMENU.snap;if(!snap)return;const S=new THREE.Scene();S.add(new THREE.HemisphereLight(0xFFFFFF,0x40305A,1.05));const l=new THREE.DirectionalLight(0xFFFFFF,1.2);l.position.set(3,5,7);S.add(l);
+ const cam=new THREE.PerspectiveCamera(32,1,.1,100);const rot={foguete:[.2,-.9,.75],gosma:[.3,.4,0],espinho:[.15,-.35,0],escudo:[.15,-.35,0],bolha:[.2,.3,0],raio:[.1,-.35,0],nitro:[.25,.5,-.25],ima:[.1,-.3,0],fantasma:[.1,-.3,0],surpresa:[.45,.7,0]};
+ NOVOS.forEach(id=>{const m=MK[id](),r=rot[id]||[0,0,0];m.rotation.set(r[0],r[1],r[2]);if(id==='foguete'){m.rotation.set(0,Math.PI/2,0);m.rotateOnWorldAxis(new THREE.Vector3(0,0,1),.75);m.rotateOnWorldAxis(new THREE.Vector3(0,1,0),-.35)}S.add(m);m.updateMatrixWorld(true);const bs=new THREE.Box3().setFromObject(m).getBoundingSphere(new THREE.Sphere());
+  cam.position.set(bs.center.x,bs.center.y,bs.center.z+bs.radius/Math.sin(16*Math.PI/180)*1.02);cam.lookAt(bs.center);cam.updateProjectionMatrix();const u=snap(S,cam,160,160);if(u)I2.icons[id]=u;S.remove(m)})}
+try{(document.fonts?document.fonts.ready:Promise.resolve()).then(()=>setTimeout(genIcons,50))}catch(e){setTimeout(genIcons,500)}
+window.ITENS2={I2,MK,genIcons,sorteia};
+
+/* ---------- HUD: casa do item com ícone 3D, roleta e efeitos ativos ---------- */
+{const s=document.createElement('style');s.textContent=`
+html body .pv .item{display:none!important}
+.i2it{position:relative;flex:none;width:10.5vh;height:10.5vh;border-radius:2.2vh;background:rgba(16,24,46,.86);border:.4vh solid rgba(255,255,255,.28);box-shadow:0 .6vh 2vh rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center}
+.i2it img{width:86%;height:86%;object-fit:contain;filter:drop-shadow(0 .4vh .3vh rgba(0,0,0,.45))}
+.i2it .q{font-family:Bungee,'Arial Black',sans-serif;font-size:4.8vh;color:rgba(255,255,255,.2)}
+.i2it .em{font-size:5.4vh}
+.i2it b{position:absolute;left:50%;top:-2.9vh;transform:translateX(-50%);white-space:nowrap;font-family:Oxanium,sans-serif;font-weight:800;font-size:1.5vh;letter-spacing:.08em;color:#fff;background:rgba(16,24,46,.88);padding:.2vh .8vw;border-radius:99px}
+.i2it.has{border-color:#FFD43B;background:radial-gradient(circle at 50% 40%,rgba(255,200,110,.6),rgba(255,107,34,.92));box-shadow:0 0 2.8vh rgba(255,212,59,.75);animation:i2pu .8s ease-in-out infinite alternate}
+@keyframes i2pu{to{box-shadow:0 0 4.2vh rgba(255,212,59,.95)}}
+.i2it.roll{border-color:#2E9BFF;background:radial-gradient(circle,rgba(46,155,255,.45),rgba(16,24,46,.92));box-shadow:0 0 2.8vh rgba(46,155,255,.8)}.i2it.roll img{filter:blur(.12vh) brightness(1.2)}
+.i2it.land{animation:i2la .4s cubic-bezier(.2,1.7,.4,1)}@keyframes i2la{from{transform:scale(1.45)}}
+.pv.sm .i2it{width:6.6vh;height:6.6vh;border-radius:1.4vh}.pv.sm .i2it b{font-size:1.05vh;top:-2.1vh}.pv.sm .i2it .em{font-size:3.4vh}
+.i2fx{position:absolute;left:1.6vw;bottom:19vh;display:flex;flex-direction:column;gap:.6vh;align-items:flex-start;pointer-events:none}
+.i2fx b{display:flex;align-items:center;gap:.5vw;padding:.4vh .9vw .4vh .4vw;border-radius:99px;background:rgba(16,24,46,.86);color:#fff;font-family:Oxanium,sans-serif;font-weight:800;font-size:1.7vh;letter-spacing:.06em;border:.25vh solid var(--c);box-shadow:0 0 1.6vh var(--c)}
+.i2fx b img{width:3vh;height:3vh}.pv.sm .i2fx{bottom:12vh}.pv.sm .i2fx b{font-size:1.15vh}.pv.sm .i2fx b img{width:2vh;height:2vh}`;document.head.appendChild(s)}
+const icoHTML=id=>I2.icons[id]?`<img src="${I2.icons[id]}" alt="">`:`<span class="em">${(ITEMS[id]||{}).ico||'?'}</span>`;
+on('hudbuild',(k,el)=>{const bl=el.querySelector('.bl'),it=document.createElement('div');it.className='i2it';bl.appendChild(it);const fx=document.createElement('div');fx.className='i2fx';el.appendChild(fx);
+ k.i2H={it,fx,key:'',fxk:''}});
+on('hud',()=>humans.forEach(k=>{const H=k.i2H;if(!H)return;let key,cls='',html;
+ if(k.item==='roleta'){const f=Math.floor((k.i2Roll>.45?tm*14:tm*7));key='r'+f;cls='roll';html=icoHTML(NOVOS[f%NOVOS.length])+'<b>SORTEANDO…</b>';}
+ else if(k.item&&ITEMS[k.item]){key='i'+k.item;cls='has';html=icoHTML(k.item)+'<b>'+ITEMS[k.item].nm+'</b>'}
+ else{key='-';html='<span class="q">?</span>'}
+ if(key!==H.key){const was=H.key;H.key=key;H.it.className='i2it '+cls+(was[0]==='r'&&key[0]==='i'?' land':'');H.it.innerHTML=html;if(key[0]==='r'&&k.human&&was!==key)snd('tique',k)}
+ let fx='';if(k.i2Sh>0)fx+=`<b style="--c:#2E9BFF">${icoHTML('escudo')}ESCUDO</b>`;if(k.i2Bu>0)fx+=`<b style="--c:#3DDC97">${icoHTML('bolha')}BOLHA ${Math.ceil(k.i2Bu)}s</b>`;
+ if(k.i2Gh>0)fx+=`<b style="--c:#CFE6FF">${icoHTML('fantasma')}FANTASMA ${Math.ceil(k.i2Gh)}s</b>`;if(k.i2Im>0)fx+=`<b style="--c:#9BB4FF">${icoHTML('ima')}ÍMÃ ${Math.ceil(k.i2Im)}s</b>`;
+ if(fx!==H.fxk){H.fxk=fx;H.fx.innerHTML=fx}}));
+/* painel de ajuda (H) com os itens novos */
+{const how=document.getElementById('how');if(how){const d=[...how.children].find(c=>/CAIXAS/.test(c.textContent));if(d)d.innerHTML='<b>CAIXAS "?"</b> · 🚀 MINI FOGUETE · 🟣 GOSMA · 🦔 BOLA ESPINHOSA · 🛡️ ESCUDO · 🫧 BOLHA · ⚡ RAIO TURBO · 🔋 NITRO · 🧲 ÍMÃ · 👻 FANTASMA · 🎁 SURPRESA. Quem está atrás ganha itens mais fortes!'}}
+}
+/* ===== FIM · ITENS 2.0 ===== */
+
+
 /* ===== KART RUSH · EDITOR DE CENÁRIO =====
  Menu → "🛠 EDITOR DE CENÁRIO" (ou F2). Câmera livre por cima do mapa escolhido; clique num objeto para escolher,
  arraste as setas para mover / o anel para girar / os cubos para mudar o tamanho; Del apaga, Ctrl+D duplica, Ctrl+Z desfaz.
@@ -5298,6 +5590,7 @@ function show(s){RM.scr=s;RM.seed=true;$('rmHome').classList.toggle('on',s==='ho
  else if(s==='map'){RM.camp=SMODE==='camp';const L=lista();RM.mi=Math.max(0,L.indexOf(SEL));mapHTML()}
  else gOpen();hints(true)}
 RM.show=show;
+RM.snap=(S,cam,w,h)=>{if(!pvInit())return null;const R2=PV.R,pr=R2.getPixelRatio();R2.setPixelRatio(1);R2.setSize(w,h,false);R2.setClearColor(0,0);cam.aspect=w/h;cam.updateProjectionMatrix();R2.render(S,cam);const u=R2.domElement.toDataURL();R2.setPixelRatio(pr);PV.t=0;return u};
 
 /* ---------- maquete 3D (renderer próprio, leve: sem sombras, peças instanciadas) ---------- */
 const PV={R:null,S:null,cam:null,g:null,id:null,t:0,pop:1,ang:.6,fail:false};
