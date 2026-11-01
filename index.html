@@ -2996,7 +2996,7 @@ const _qCab=new THREE.Quaternion();let tm=0;function visuals(dt){tm+=dt;pickups.
   if(k.cam){const cy=Math.max(k.y,0);k.camH+=wrap(k.h-k.camH)*(1-Math.exp(-4.2*dt));
    /* câmera nas curvas: atrasa um pouco, abre para o lado de fora (mostra a lateral do kart), olha para dentro da curva e inclina de leve */
    k.cl=(k.cl||0)+(clamp(k.yr*Math.abs(k.v)*.011,-1,1)-(k.cl||0))*(1-Math.exp(-3*dt));const lx=Math.cos(k.camH),lz=-Math.sin(k.camH);
-   const bk=17+(k.boost>0?3:0),tx=k.x-Math.sin(k.camH)*bk-lx*k.cl*3.4,tz=k.z-Math.cos(k.camH)*bk-lz*k.cl*3.4;k.cam.position.lerp(new THREE.Vector3(tx,9.5+cy*.7,tz),1-Math.exp(-12*dt));
+   const bk=17+(k.boost>0?3:0),tx=k.x-Math.sin(k.camH)*bk-lx*k.cl*3.4,tz=k.z-Math.cos(k.camH)*bk-lz*k.cl*3.4;const chao=Math.max(0,k.gy>-1?k.gy:0),bkH=window.PISTAS?PISTAS.hAt(k.fi-bk/SEG,0):0,cyy=Math.max(chao,bkH)+Math.max(0,cy-chao)*.7;k.cam.position.lerp(new THREE.Vector3(tx,9.5+cyy,tz),1-Math.exp(-12*dt));
    k.cam.lookAt(k.x+Math.sin(k.camH)*10+lx*k.cl*4,1.5+cy,k.z+Math.cos(k.camH)*9+lz*k.cl*4);k.cam.rotateZ(k.cl*.045);const tf=68+Math.abs(k.v)*.22+(k.boost>0?12:0);k.fov+=(tf-k.fov)*(1-Math.exp(-6*dt));k.cam.fov=k.fov}});
  emit('visuals',dt)}
 const menuCam=new THREE.PerspectiveCamera(60,1,1,2400);
@@ -5891,7 +5891,7 @@ const gruda=i=>HAS3D&&GRU[tSamp(i)]===1;
  /* espiral: gruda + inclinação para dentro da curva (entra e sai suave) */
  GRU.fill(0);TB.fill(0);d.esp.forEach(([a,b])=>{const i0=Math.round(a*N),i1=Math.round(b*N),L=i1-i0,F=Math.min(18,L/3);
   for(let i=i0;i<=i1;i++){const j=tSamp(i),t0=TG[tSamp(i-4)],t1=TG[tSamp(i+4)],turn=wrap(Math.atan2(t1.x,t1.z)-Math.atan2(t0.x,t0.z)),e=Math.min(1,(i-i0)/F,(i1-i)/F);
-   GRU[j]=1;TB[j]=-Math.sign(turn)*Math.tan(.36)*Math.max(0,e*e*(3-2*e))}});
+   GRU[j]=1;TB[j]=-Math.sign(turn)*Math.tan(.17)*Math.max(0,e*e*(3-2*e))}});
  calcBordas();HAS3D=true;
  d.gI=(d.gaps||[]).map(g=>{const a=Math.round(g.u*N);return{a,b:a+Math.ceil(g.len/SEG),r0:a-Math.ceil(g.ramp/SEG),h:g.h,len:g.len,ramp:g.ramp}});
  d.iI=[]}}
@@ -5931,7 +5931,7 @@ const TEMAS={selva:{nm:'SELVA',ico:'🌴',chao:'#4E9A3E',chao2:'#3E8434',p:'arvo
 /* expande a pista do editor: a ESPIRAL vira uma volta de 360° subindo 14 m (pontos extras) */
 function expandir(P){const pts=[],hts=[],tags=[],n=P.pts.length;let cx=0,cz=0;P.pts.forEach(a=>{cx+=a.x/n;cz+=a.z/n});
  for(let i=0;i<n;i++){const a=P.pts[i],b=P.pts[(i+1)%n];pts.push([a.x,a.z]);hts.push(a.h||0);tags.push(a.m||'');
-  if(a.m==='espiral'){const dx=b.x-a.x,dz=b.z-a.z,L=Math.hypot(dx,dz)||1,tx=dx/L,tz=dz/L,R=30,DH=14,K=10;
+  if(a.m==='espiral'){const dx=b.x-a.x,dz=b.z-a.z,L=Math.hypot(dx,dz)||1,tx=dx/L,tz=dz/L,R=62,DH=14,K=14;
    let best=null;for(const s of[1,-1]){const c={x:a.x+tz*s*R,z:a.z-tx*s*R},d2=(c.x-cx)**2+(c.z-cz)**2;if(!best||d2>best.d2)best={c,d2}}
    const c=best.c,t0=Math.atan2(a.x-c.x,a.z-c.z),pp=t=>({x:c.x+Math.sin(t)*R,z:c.z+Math.cos(t)*R});
    let dir=1;{const p1=pp(t0+.1);if((p1.x-a.x)*tx+(p1.z-a.z)*tz<0)dir=-1}
@@ -6208,8 +6208,8 @@ const P={id:'vulcao',nome:'VULCÃO MALUCO 2.0',tema:'fogo',pts:PT.map(a=>({x:a[0
 const d=Object.assign(PISTAS.defPista(P),{id:'vulcao',nome:'VULCÃO MALUCO 2.0',ico:'🌋',dif:5,esc:ESC*.85,saia:0x2E2422,editavel:false,
  sub:'Fortaleza, túnel de lava, espiral grudenta, rampa sobre a lava, cratera do dino e ponte que desmorona',
  menu:'túnel de lava · espiral · cratera · ponte',fallMsg:'🔥 CAIU NA LAVA! ⏱ 2s',build:cenVulcao});
-STAGES.vulcao=d;if(STAGES.fogo)STAGES.fogo.hidden=true;{const i=CAMP.indexOf('fogo');if(i>=0)CAMP[i]='vulcao'}
-try{if(localStorage.getItem('mmt_kart_fase')==='fogo')localStorage.setItem('mmt_kart_fase','vulcao')}catch(e){}
+STAGES.vulcao=d;d.hidden=true; /* escondido a pedido: o Vulcão antigo (fogo) voltou para o menu e o campeonato */
+try{if(localStorage.getItem('mmt_kart_fase')==='vulcao')localStorage.setItem('mmt_kart_fase','fogo')}catch(e){}
 const ex=k=>k+(k>9?10:0),uO=k=>d.uk[ex(k)],LNr=c=>new THREE.Color(c).convertSRGBToLinear(),HT=PISTAS.HT,TB=PISTAS.TB,ts=i=>((i%N)+N)%N;
 const V={on:false,rocks:[],rT:1,ponte:null,emb:0};
 /* chamado logo antes da pista ser montada (já existe a curva): calcula as zonas */
