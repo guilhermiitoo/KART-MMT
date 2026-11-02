@@ -5952,7 +5952,7 @@ const TEMAS={selva:{nm:'SELVA',ico:'🌴',chao:'#4E9A3E',chao2:'#3E8434',p:'arvo
 /* expande a pista do editor: a ESPIRAL vira uma volta de 360° subindo 14 m (pontos extras) */
 function expandir(P){const pts=[],hts=[],tags=[],n=P.pts.length;let cx=0,cz=0;P.pts.forEach(a=>{cx+=a.x/n;cz+=a.z/n});
  for(let i=0;i<n;i++){const a=P.pts[i],b=P.pts[(i+1)%n];pts.push([a.x,a.z]);hts.push(a.h||0);tags.push(a.m||'');
-  if(a.m==='espiral'){const dx=b.x-a.x,dz=b.z-a.z,L=Math.hypot(dx,dz)||1,tx=dx/L,tz=dz/L,R=P.espR||62,DH=P.espH||14,K=14;
+  if(a.m==='espiral'){const dx=b.x-a.x,dz=b.z-a.z,L=Math.hypot(dx,dz)||1,tx=dx/L,tz=dz/L,R=P.espR||62,DH=P.espH||26,K=14;
    let best=null;for(const s of[1,-1]){const c={x:a.x+tz*s*R,z:a.z-tx*s*R},d2=(c.x-cx)**2+(c.z-cz)**2;if(!best||d2>best.d2)best={c,d2}}
    const c=best.c,t0=Math.atan2(a.x-c.x,a.z-c.z),pp=t=>({x:c.x+Math.sin(t)*R,z:c.z+Math.cos(t)*R});
    let dir=1;{const p1=pp(t0+.1);if((p1.x-a.x)*tx+(p1.z-a.z)*tz<0)dir=-1}
@@ -5981,10 +5981,15 @@ function buildAlt(d){const n0=world.children.length,p0=pitMeshes.length;_bt(d);c
  /* barreiras na altura da pista (troca as do construtor comum) */
  for(let i=world.children.length-1;i>=0;i--){const o=world.children[i];if(o.isInstancedMesh&&o.geometry.parameters&&o.geometry.parameters.height===1.5&&o.geometry.parameters.width===1){world.remove(o);break}}
  const ok=[];for(let k=0;k<N;k+=2){if(d.gI.some(g=>ixd(k,g.r0-2)<g.b-g.r0+4))continue;ok.push(k)}
- const im=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1.5,1),new THREE.MeshStandardMaterial({roughness:.6}),ok.length*2),o=new THREE.Object3D(),c=new THREE.Color();let q=0;
- ok.forEach(k=>{for(const s of[-1,1]){if(semMuro(k,s))continue;const k2=tSamp(k+2),p=SP[k],r=RT[k],p2=SP[k2],r2=RT[k2],l0=lx(k,s*(hw+.5)),l1=lx(k2,s*(hw+.5)),x0=p.x+r.x*l0,z0=p.z+r.z*l0,x1=p2.x+r2.x*l1,z1=p2.z+r2.z*l1,
-  y0=HT[k]+l0*TB[k],y1=HT[k2]+l1*TB[k2],L=Math.hypot(x1-x0,z1-z0);o.position.set((x0+x1)/2,(y0+y1)/2+.75,(z0+z1)/2);o.rotation.set(0,Math.atan2(x1-x0,z1-z0),0,'YXZ');o.rotation.x=-Math.atan2(y1-y0,L);
-  o.scale.set(1,GRU[k]?2.2:1,Math.max(.05,L-.04));o.updateMatrix();im.setMatrixAt(q,o.matrix);im.setColorAt(q,c.set(GRU[k]?((k/2)%2?0x22D3FF:0x1E5FC8):((k/2)%2?d.bar[0]:d.bar[1])));q++}});im.count=q;world.add(im);
+ /* muro contínuo: cada trecho começa exatamente onde o anterior termina (nas curvas as peças não se sobrepõem) */
+ const o=new THREE.Object3D(),c=new THREE.Color(),okS=new Set(ok),wp=[],wc=[],wi=[];let wv=0;
+ const pw=(k,l,h)=>{const ll=lx(k,l),p=SP[k],r=RT[k];return[p.x+r.x*ll,HT[k]+ll*TB[k]+h,p.z+r.z*ll]};
+ const quad=(A,Bq,C,D)=>{wp.push(...A,...Bq,...C,...D);for(let n=0;n<4;n++)wc.push(c.r,c.g,c.b);wi.push(wv,wv+1,wv+2,wv+1,wv+3,wv+2);wv+=4};
+ ok.forEach(k=>{const k2=tSamp(k+2);if(!okS.has(k2))return;for(const s of[-1,1]){if(semMuro(k,s))continue;c.set((k/2)%2?d.bar[0]:d.bar[1]);
+  const ia=pw(k,s*hw,0),ib=pw(k2,s*hw,0),oa=pw(k,s*(hw+1),0),ob=pw(k2,s*(hw+1),0),up=v=>[v[0],v[1]+1.5,v[2]];
+  quad(ia,ib,up(ia),up(ib));quad(oa,ob,up(oa),up(ob));quad(up(ia),up(ib),up(oa),up(ob))}});
+ {const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(wp,3));g.setAttribute('color',new THREE.Float32BufferAttribute(wc,3));g.setIndex(wi);g.computeVertexNormals();
+  world.add(new THREE.Mesh(g,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.6,side:THREE.DoubleSide})))}
  /* laterais e fundo da pista suspensa (até o chão quando é baixa e não tem pista embaixo) */
  const livre=(i,x,z)=>{for(let j=0;j<N;j+=2){if(Math.abs(ixd(j,i))<20||Math.abs(ixd(i,j))<20)continue;if(HT[j]<HT[i]-3&&(SP[j].x-x)**2+(SP[j].z-z)**2<(hw+6)**2)return false}return true};
  const pos=[],idx=[];let v=0;const addQ=(a,b,c2,d2)=>{pos.push(...a,...b,...c2,...d2);idx.push(v,v+1,v+2,v+1,v+3,v+2,v,v+2,v+1,v+1,v+2,v+3);v+=4};
@@ -6002,7 +6007,7 @@ function buildAlt(d){const n0=world.children.length,p0=pitMeshes.length;_bt(d);c
   (d.pon||[]).forEach(([a,b])=>{for(const s of[-1,1])world.add(ribbon(Math.round(a*N),Math.round(b*N),s*hw-1.2*Math.max(s,0),s*hw+1.2*Math.max(-s,0)+(s>0?0:0),-.7,M(0x4A2E18),10))})}
  /* faixa gruda-gruda (azul brilhante, setas andando) */
  d.gruM=[];d.esp.forEach(([a,b])=>{const t=gruT.clone();t.needsUpdate=true;t.repeat.set(1,1);const m=new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2});
-  world.add(ribbon(Math.round(a*N),Math.round(b*N),-hw*.62,hw*.62,.07,m,14));d.gruM.push(t)});
+  d.gruM.push(t)});/* faixa azul tirada: a espiral é uma subida normal */
  /* túnel: casca em arco sobre a pista, luzes no teto e portais */
  d.tun.forEach(([a,b])=>{const i0=Math.round(a*N),i1=Math.round(b*N),R=hw+4,S=12,P2=[],I2=[];let n=0;
   for(let i=i0;i<=i1;i++){const j=tSamp(i),p=SP[j],r=RT[j];for(let s=0;s<=S;s++){const an=Math.PI*s/S,l=Math.cos(an)*R,y=HT[j]+Math.sin(an)*R*.62;P2.push(p.x+r.x*l,y,p.z+r.z*l)}
@@ -6176,7 +6181,7 @@ pcv.addEventListener('wheel',e=>{e.preventDefault();const r=pcv.getBoundingClien
 const setAlt=v=>{const a=PE.P.pts[PE.sel];if(!a)return;a.h=clamp(Math.round(v),0,30);peUI();peDraw()};
 $('peAlt').addEventListener('input',e=>{if(PE.sel>=0){if(!PE.altSnap){snapH();PE.altSnap=1}setAlt(+e.target.value)}});$('peAlt').addEventListener('change',()=>PE.altSnap=0);
 $('peMk').addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(b)marcar(b.dataset.m)});
-function marcar(m){const a=PE.P.pts[PE.sel];if(!a){pmsg('Clique num ponto primeiro');return}peMut(()=>{a.m=m});if(m==='espiral')pmsg('🌀 Espiral: a pista dá uma volta subindo 14 m a partir deste ponto')}
+function marcar(m){const a=PE.P.pts[PE.sel];if(!a){pmsg('Clique num ponto primeiro');return}peMut(()=>{a.m=m});if(m==='espiral')pmsg('🌀 Espiral: a pista dá uma volta subindo 26 m a partir deste ponto')}
 $('peTema').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b)peMut(()=>PE.P.tema=b.dataset.t)});
 $('peNome').addEventListener('input',e=>{PE.P.nome=e.target.value.toUpperCase()});
 $('peLarg').addEventListener('click',()=>{if(PE.sel<=0)return;peMut(()=>{const P=PE.P;P.pts=P.pts.slice(PE.sel).concat(P.pts.slice(0,PE.sel));PE.sel=0});pmsg('🏁 Largada movida para este ponto')});
@@ -6350,7 +6355,7 @@ function cenVulcao(dd){const hw=W/2;V.tochas=[];V.band=[];V.olhos=[];V.fum=[];
    c.position.set(SP[j].x+RT[j].x*l,y-len/2,SP[j].z+RT[j].z*l);c.scale.set(.6+Math.random()*.6,len,.6+Math.random()*.6);c.rotation.x=Math.PI;world.add(c)}
   for(const s of[-1,1])world.add(ribbon(i0,i1,s*(hw+2.2),s*(hw+3.6),.4,new THREE.MeshBasicMaterial({color:0xFF6A1A}),8))});
  /* espiral e rampa */
- (d.esp||[]).forEach(([a])=>placa(a-.03,'ESPIRAL GRUDENTA','#22D3FF','A faixa azul segura o kart!'));
+ (d.esp||[]).forEach(([a])=>placa(a-.03,'ESPIRAL DO VULCÃO','#22D3FF','Sobe em caracol!'));
  (d.gI||[]).forEach(g=>placa(ts(g.r0-Math.round(30/SEG))/N,'RIO DE LAVA','#FF6B22','Acelere e pule!'));
  /* cratera com o crânio gigante e pontas de pedra */
  {const uc=uO(14),ic=ts(Math.round(uc*N)),t0=TG[ts(ic-10)],t1=TG[ts(ic+10)],turn=wrap(Math.atan2(t1.x,t1.z)-Math.atan2(t0.x,t0.z)),out=-(Math.sign(turn)||1);placa(uO(13),'CRATERA DO DINO','#FFD43B','Olha o tamanho desse crânio!');
@@ -6420,14 +6425,14 @@ window.VULCAO2={d,V};
  jacarés, cortina d'água, tucanos e mata) é reposicionado nos trechos planos deste traçado (Q calculado aqui). */
 (()=>{if(!window.PISTAS||!STAGES.selva)return;
 const PT=[[667,158,0,""],[549,-62,0,""],[235,-101,0,""],[284,-373,0,"espiral"],[15,-441,18,""],[-194,-321,7,""],[-28,-100,0,""],[-38,5,0,""],[-131,78,0,""],[-242,86,0,""],[-299,14,0,"ponte"],[-396,-326,0,""],[-606,-213,1,""],[-490,30,3,""],[-357,241,4,""],[-483,309,5,""],[-636,165,8,""],[-805,61,15,""],[-853,328,30,""],[-768,581,15,""],[-540,608,8,""],[-577,870,4,""],[-381,773,4,""],[-281,500,0,""],[-122,360,0,""],[133,596,0,""],[410,469,0,"rampa"]];
-const P={id:'selva',nome:'SELVA TROPICAL',tema:'selva',espR:100,espH:22,pts:PT.map(a=>({x:a[0],z:a[1],h:a[2],m:a[3]}))};
+const P={id:'selva',nome:'SELVA TROPICAL',tema:'selva',espR:100,espH:32,pts:PT.map(a=>({x:a[0],z:a[1],h:a[2],m:a[3]}))};
 const X=PISTAS.expandir(P),EX=k=>{let e=k;for(let i=0;i<k;i++)if(P.pts[i].m==='espiral')e+=14;return e};
 const d=STAGES.selva;
 Object.assign(d,{pts:X.pts,hts:X.hts,tags:X.tags.map(t=>t==='ponte'?'':t),alt:true,esc:1,W:68,P,tema:'selva',vel:1.45,voltas:2,dif:3,ice:[],gaps:[],atalho:[2,3],
  sub:'Pista longa de alta velocidade: cachoeira, rio, ponte de madeira, jacarés, subida na mata e espiral grudenta',menu:'alta velocidade · cachoeira · espiral · jacarés',
  qCalc(d){const u=k=>d.uk[EX(k)],ub=(u(10)+u(11))/2,mb=Math.min(.012,(u(11)-u(10))/3),q={c0:u(0)+.03,c1:Math.min(u(2)-.01,u(0)+.11),j:u(7),b0:ub-mb,b1:ub+mb,cort:(()=>{let b=.8,bc=1e9;for(let uu=.58;uu<.9;uu+=.004){const i=Math.round(uu*N),a=Math.max(3,Math.round(60/SEG)),an=v=>Math.atan2(v.x,v.z),c=Math.abs(wrap(an(TG[(i+a)%N])-an(TG[(i-a+N)%N])))+(PISTAS.HT[i]>1?9:0);if(c<bc){bc=c;b=uu}}return b})()};
   const e=(d.esp||[])[0];d.arches=[[.014,'LARGADA · SELVA TROPICAL','#2EAD4B','Bem-vindo à selva!'],[q.c0+.004,'CACHOEIRA GIGANTE','#258BFF','Olha o arco-íris!'],[q.j-.02,'TRILHA DOS JACARÉS','#FF6B22','Cuidado: animais na pista'],
-   [q.b0-.012,'PONTE DE MADEIRA','#8A5A2B','Segura firme!'],[u(15),'SUBIDA DA MATA','#2EAD4B','Pé no fundo!']].concat(e?[[e[0]-.02,'ESPIRAL GRUDENTA','#22D3FF','A faixa azul segura o kart!']]:[]).concat([[.95,'RETA FINAL','#FFD43B','Falta pouco!']]);return q}});
+   [q.b0-.012,'PONTE DE MADEIRA','#8A5A2B','Segura firme!'],[u(15),'SUBIDA DA MATA','#2EAD4B','Pé no fundo!']].concat(e?[[e[0]-.02,'ESPIRAL DA MATA','#22D3FF','Sobe em caracol!']]:[]).concat([[.95,'RETA FINAL','#FFD43B','Falta pouco!']]);return q}});
 /* alta velocidade: tudo mais rápido neste mapa (robôs também) e menos voltas */
 on('speed',k=>ST&&ST.vel?ST.vel:1);
 /* robôs em pista longa: olham a curva pela distância (não pelo número de pontos) e aceleram nas retas */
@@ -6521,7 +6526,7 @@ function render(){const I=(window.ITENS2&&ITENS2.I2.icons)||{},em={foguete:'🚀
  <div class="c" style="--c:#FF6B22;--i:1"><i>💨</i><b>DRIFT = TURBO</b><p>Numa curva, segure <kbd>SHIFT</kbd> (P1), <kbd>/</kbd> (P2) ou <kbd>RB</kbd> no controle.</p><p>As faíscas mudam de cor: <em>azul → laranja → roxo</em>. Quanto mais tempo, maior o turbo quando soltar!</p><p><em>Pulou uma rampa?</em> Aperte o drift no ar: o kart gira e ganha turbo ao pousar!</p><p>As setas laranja no chão também dão turbo.</p></div>
  <div class="c" style="--c:#FFD43B;--i:2"><i>🎁</i><b>ITENS</b><p>Passe nas caixas <em>"?"</em>: a roleta sorteia um item. Use com <kbd>ESPAÇO</kbd> (P1), <kbd>ENTER</kbd> (P2) ou <kbd>X</kbd> no controle.</p><p>Quem está atrás ganha itens mais fortes.</p>
   <div class="its">${Object.keys(NOMES).map(k=>`<span>${I[k]?`<img src="${I[k]}" alt="">`:`<em>${em[k]}</em>`}${NOMES[k]}</span>`).join('')}</div></div>
- <div class="c" style="--c:#47D7A0;--i:3"><i>🪙</i><b>MOEDAS E PERIGOS</b><p>Cada moeda deixa o kart mais rápido (até 10). Levou um golpe? Perde 3.</p><p>Caiu num buraco ou na lava: <em>2 segundos de castigo</em>. Acelere antes das rampas!</p><p>A faixa azul <em>gruda-gruda</em> segura o kart na espiral. Procure os atalhos!</p></div></div>
+ <div class="c" style="--c:#47D7A0;--i:3"><i>🪙</i><b>MOEDAS E PERIGOS</b><p>Cada moeda deixa o kart mais rápido (até 10). Levou um golpe? Perde 3.</p><p>Caiu num buraco ou na lava: <em>2 segundos de castigo</em>. Acelere antes das rampas!</p><p>Suba a <em>espiral</em> sem medo e procure os atalhos!</p></div></div>
  <div class="ok" id="tutOk"><span>BORA CORRER! · ENTER</span></div>`;$('tutOk').onclick=fechar}
 function abrir(){render();TUT.on=true;el.classList.add('on');TUT.pb={};pads().forEach(p=>p.buttons.forEach((b,i)=>TUT.pb[p.index+':'+i]=b.pressed))}
 function fechar(){TUT.on=false;el.classList.remove('on');try{localStorage.setItem('kr_tut','1')}catch(e){}if(window.RMENU)RMENU.seed=true}
