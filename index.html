@@ -6193,6 +6193,7 @@ addEventListener('keydown',e=>{if(!PE.on)return;if(e.target&&e.target.tagName===
  K câmera do kart · F (ou o botão) tira foto (baixa PNG com mapa, % da volta, ponto, x/z/altura) · Esc volta ao editor */
 const IN=window.INSP={on:false,cam:new THREE.PerspectiveCamera(62,1,.5,5000),yaw:0,pit:-.25,v:70,k:{},id:null,u:0,kv:false,t:0,inf:''};
 {const s=document.createElement('style');s.textContent=`
+body.inspon #sMenu,body.inspon #sLobby,body.inspon #sEnd,body.inspon .pv,body.inspon #top,body.inspon #mini,body.inspon #div,body.inspon #big,body.inspon .sig,body.inspon #rmTv{display:none!important}
 #insp{position:fixed;inset:0;z-index:58;display:none;pointer-events:none;font-family:Inter,'Segoe UI',Arial,sans-serif;color:#fff}#insp.on{display:block}
 #insp .ib{position:absolute;left:1.4vw;top:2vh;padding:1.2vh 1vw;border-radius:1.4vh;background:rgba(10,15,34,.86);border:.25vh solid rgba(255,212,59,.6);font-family:Oxanium,sans-serif;font-weight:700;font-size:1.7vh;line-height:1.55;letter-spacing:.04em;pointer-events:none;white-space:pre}
 #insp .ib b{color:#FFD43B;font-family:Rajdhani,Oxanium,sans-serif;font-size:2.2vh;letter-spacing:.1em}
@@ -6203,15 +6204,15 @@ const IN=window.INSP={on:false,cam:new THREE.PerspectiveCamera(62,1,.5,5000),yaw
 #insp .aj{position:absolute;right:1.4vw;top:2vh;padding:1vh 1vw;border-radius:1.2vh;background:rgba(10,15,34,.8);font-size:1.4vh;line-height:1.6;color:#C9D3F5;pointer-events:none}#insp .aj b{color:#FFD43B}
 #insp .fl{position:absolute;inset:0;background:#fff;opacity:0;transition:opacity .35s;pointer-events:none}#insp .fl.on{opacity:.8;transition:none}`;document.head.appendChild(s)}
 const inEl=document.createElement('div');inEl.id='insp';inEl.innerHTML=`<div class="fl" id="inFl"></div><div class="ib" id="inInfo"></div>
- <div class="aj"><b>W A S D</b> anda · <b>Q / E</b> desce / sobe · <b>arrastar</b> gira<br><b>Shift</b> rápido · <b>roda</b> velocidade · <b>← / →</b> pula 1% da pista<br><b>K</b> câmera do kart · <b>F</b> foto · <b>Esc</b> volta</div>
+ <div class="aj"><b>W A S D</b> voa para onde olha · <b>Q/E</b> ou <b>Ctrl/Espaço</b> desce/sobe · <b>arrastar</b> gira<br><b>Shift</b> rápido · <b>roda</b> velocidade · <b>← / →</b> pula 1% da pista<br><b>K</b> câmera do kart · <b>F</b> foto · <b>Esc</b> volta</div>
  <div class="tb"><div class="bt" id="inAnt">◀ 1%</div><input type="range" id="inU" min="0" max="1000" value="0"><div class="bt" id="inProx">1% ▶</div><div class="bt" id="inKart">🚗 CÂMERA DO KART</div><div class="bt ft" id="inFoto">📸 TIRAR FOTO</div><div class="bt" id="inSair">SAIR · ESC</div></div>`;document.body.appendChild(inEl);
 function inInfo(){const c=IN.cam.position;let b=0,bd=1e9;for(let i=0;i<N;i++){const q=(SP[i].x-c.x)**2+(SP[i].z-c.z)**2;if(q<bd){bd=q;b=i}}const lat=(c.x-SP[b].x)*RT[b].x+(c.z-SP[b].z)*RT[b].z,d=STAGES[IN.id];
  IN.u=b/N;if(document.activeElement!==$('inU'))$('inU').value=Math.round(IN.u*1000);IN.inf=`${d.ico} ${d.nome}  ·  mapa "${IN.id}"\nPONTO DA PISTA: ${(b/N*100).toFixed(1).replace('.',',')}% da volta  (amostra ${b} de ${N})\nlado: ${lat>W/2?'fora, à DIREITA':lat<-W/2?'fora, à ESQUERDA':'em cima da pista'} (${lat.toFixed(0)} m do centro)\nchão da pista: ${(SP[b].y||0).toFixed(1)} m  ·  câmera: ${c.y.toFixed(1)} m de altura\nx ${c.x.toFixed(0)}  z ${c.z.toFixed(0)}  ·  olhando ${Math.round(((IN.yaw*180/Math.PI)%360+360)%360)}°`;
  $('inInfo').innerHTML='<b>🔎 INSPEÇÃO</b>\n'+IN.inf}
 function inPula(u){u=((u%1)+1)%1;IN.ub=u;const i=Math.round(u*N)%N,t=TG[i],h=Math.atan2(t.x,t.z),y=SP[i].y||0;IN.yaw=h;if(IN.kv){IN.cam.position.set(SP[i].x-t.x*17,y+9.5,SP[i].z-t.z*17);IN.pit=-.22}
  else{IN.cam.position.set(SP[i].x-t.x*40,y+24,SP[i].z-t.z*40);IN.pit=-.38}inInfo()}
-function inAbrir(id){if(!STAGES[id])return;IN.id=id;const voltaPE=PE.on;if(voltaPE)peFechar();IN.volta=voltaPE;IN.on=true;inEl.classList.add('on');selectStage(id);karts.forEach(k=>{k.g.visible=false});inPula(.005);pmsg2('Carregou '+STAGES[id].nome)}
-function inSair(){IN.on=false;inEl.classList.remove('on');IN.k={};if(IN.volta&&PE.P)peAbrir(PST.loc[PE.P.id]?PE.P.id:null)}
+function inAbrir(id){if(!STAGES[id])return;IN.id=id;const voltaPE=PE.on;if(voltaPE)peFechar();IN.volta=voltaPE;IN.on=true;inEl.classList.add('on');document.body.classList.add('inspon');selectStage(id);karts.forEach(k=>{k.g.visible=false});inPula(.005);pmsg2('Carregou '+STAGES[id].nome)}
+function inSair(){IN.on=false;inEl.classList.remove('on');document.body.classList.remove('inspon');IN.k={};if(IN.volta&&PE.P)peAbrir(PST.loc[PE.P.id]?PE.P.id:null)}
 function pmsg2(t){const e=$('inInfo');if(e)e.innerHTML='<b>🔎 INSPEÇÃO</b>\n'+t}
 function inFoto(){const w=innerWidth,h=innerHeight;inRender(w,h,0);const g=R.domElement,c=document.createElement('canvas');c.width=g.width;c.height=g.height;const x=c.getContext('2d');x.drawImage(g,0,0);
  const k=c.width/w,lines=('KART RUSH · INSPEÇÃO\n'+IN.inf).split('\n'),fs=Math.round(15*k),lh=fs*1.45,bw=Math.max(...lines.map(l=>{x.font='700 '+fs+'px Oxanium, Segoe UI, Arial';return x.measureText(l).width}))+fs*1.6,bh=lines.length*lh+fs;
@@ -6220,7 +6221,7 @@ function inFoto(){const w=innerWidth,h=innerHeight;inRender(w,h,0);const g=R.dom
  const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='kartrush_'+IN.id+'_'+(IN.u*100).toFixed(1).replace('.',',')+'pct.png';document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),300);
  const f=$('inFl');f.classList.add('on');setTimeout(()=>f.classList.remove('on'),60);sfx(1400,.06,'square',.05)}
 function inRender(w,h,dt){const C=IN.cam,K=IN.k,sp=IN.v*(K.ShiftLeft||K.ShiftRight?3:1)*dt,fx=Math.sin(IN.yaw),fz=Math.cos(IN.yaw);
- if(dt){if(K.KeyW){C.position.x+=fx*sp;C.position.z+=fz*sp}if(K.KeyS){C.position.x-=fx*sp;C.position.z-=fz*sp}if(K.KeyA){C.position.x+=fz*sp;C.position.z-=fx*sp}if(K.KeyD){C.position.x-=fz*sp;C.position.z+=fx*sp}
+ if(dt){const cp=Math.cos(IN.pit),sy=Math.sin(IN.pit);if(K.KeyW){C.position.x+=fx*cp*sp;C.position.z+=fz*cp*sp;C.position.y+=sy*sp}if(K.KeyS){C.position.x-=fx*cp*sp;C.position.z-=fz*cp*sp;C.position.y-=sy*sp}if(K.Space)C.position.y+=sp;if(K.ControlLeft)C.position.y-=sp;if(K.KeyA){C.position.x+=fz*sp;C.position.z-=fx*sp}if(K.KeyD){C.position.x-=fz*sp;C.position.z+=fx*sp}
   if(K.KeyE)C.position.y+=sp;if(K.KeyQ)C.position.y-=sp;if((IN.t+=dt)>.2){IN.t=0;inInfo()}}
  C.rotation.set(IN.pit,IN.yaw+Math.PI,0,'YXZ');C.aspect=w/h;C.updateProjectionMatrix();karts.forEach(k=>{k.g.visible=false;if(k.sh)k.sh.visible=false});
  R.setScissorTest(true);R.setViewport(0,0,w,h);R.setScissor(0,0,w,h);R.render(scene,C)}
