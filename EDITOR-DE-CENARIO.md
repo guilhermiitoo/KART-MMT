@@ -25,6 +25,8 @@
    - Para valer **para todo mundo**, clique em **💾 Salvar arquivo**. Ele baixa o arquivo `cenarios.json`.
    - Coloque esse arquivo na raiz do repositório, no lugar do atual, ou mande para o Claude.
 
+**Montanhas, lava, vulcões, paredões:** ligue o botão **🏔 Peças grandes: SIM** no topo. Sem ele, o editor só deixa escolher objetos pequenos, para você não pegar o chão sem querer.
+
 **O que o editor não mexe:** a pista, as caixas "?" e as moedas.
 
 **Bichos e perigos que se mexem sozinhos** (jacarés, balas de goma, tentáculo, tucanos) voltam para o lugar deles, porque o jogo os move a cada momento.
