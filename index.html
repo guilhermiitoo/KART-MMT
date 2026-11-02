@@ -2569,7 +2569,8 @@ function buildTrack(d){const hw=W/2,rt=roadTex(d.road),rm=new THREE.MeshStandard
  d.iI.forEach(z=>world.add(ribbon(z.a,z.b,z.l0,z.l1,.05,new THREE.MeshStandardMaterial({map:d.slipTex?d.slipTex():iceT,transparent:true,roughness:.05,metalness:.4,emissive:0x5FB8E0,emissiveIntensity:.25,depthWrite:false}),24)))}
 /* ---------- placas / arcos ---------- */
 function ptAt(u,lat,off){const i=((Math.round(u*N)%N)+N)%N,p=SP[i],r=RT[i],l=lat?lx(i,lat):0;return{x:p.x+r.x*l,z:p.z+r.z*l,h:Math.atan2(TG[i].x,TG[i].z),i}}
-function labelTex(txt,col,sub){return new THREE.CanvasTexture(cv(1024,200,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);g.fillStyle=col;g.fillRect(0,h-26,w,26);g.fillStyle='#1F4E5F';g.font='900 '+(txt.length>22?74:96)+'px Segoe UI,Arial';g.textAlign='center';g.textBaseline='middle';g.fillText(txt,w/2,sub?72:88);if(sub){g.fillStyle='#5f7a85';g.font='700 40px Segoe UI,Arial';g.fillText(sub,w/2,142)}}))}
+function labelTex(txt,col,sub){const t=new THREE.CanvasTexture(cv(2048,256,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);g.fillStyle=col;g.fillRect(0,h-30,w,30);g.fillStyle='#1F4E5F';let fs=sub?128:150;g.font='900 '+fs+'px Segoe UI,Arial';while(g.measureText(txt).width>w-80&&fs>60){fs-=6;g.font='900 '+fs+'px Segoe UI,Arial'}
+ g.textAlign='center';g.textBaseline='middle';g.fillText(txt,w/2,sub?92:112);if(sub){g.fillStyle='#4A6874';g.font='700 56px Segoe UI,Arial';g.fillText(sub,w/2,190)}}));t.anisotropy=R.capabilities.getMaxAnisotropy();return t}
 const lamps=[];
 function arch(u,txt,col,sub,lamp){const p=ptAt(u),g=new THREE.Group();g.position.set(p.x,0,p.z);g.rotation.y=p.h;
  [-1,1].forEach(s=>{const pl=B(1.2,13,1.2,0x9DB0B9);pl.position.set(s*(W/2+1.6),6.5,0);g.add(pl)});
@@ -5912,7 +5913,7 @@ const gruda=i=>HAS3D&&GRU[tSamp(i)]===1;
  /* espiral: gruda + inclinação para dentro da curva (entra e sai suave) */
  GRU.fill(0);TB.fill(0);d.esp.forEach(([a,b])=>{const i0=Math.round(a*N),i1=Math.round(b*N),L=i1-i0,F=Math.min(18,L/3);
   for(let i=i0;i<=i1;i++){const j=tSamp(i),t0=TG[tSamp(i-4)],t1=TG[tSamp(i+4)],turn=wrap(Math.atan2(t1.x,t1.z)-Math.atan2(t0.x,t0.z)),e=Math.min(1,(i-i0)/F,(i1-i)/F);
-   GRU[j]=1;TB[j]=-Math.sign(turn)*Math.tan(.17)*Math.max(0,e*e*(3-2*e))}});
+   GRU[j]=1;TB[j]=0}});/* espiral plana: sem desnível nas bordas */
  calcBordas();HAS3D=true;
  d.gI=(d.gaps||[]).map(g=>{const a=Math.round(g.u*N);return{a,b:a+Math.ceil(g.len/SEG),r0:a-Math.ceil(g.ramp/SEG),h:g.h,len:g.len,ramp:g.ramp}});
  d.iI=[]}}
@@ -5956,7 +5957,9 @@ function expandir(P){const pts=[],hts=[],tags=[],n=P.pts.length;let cx=0,cz=0;P.
    let best=null;for(const s of[1,-1]){const c={x:a.x+tz*s*R,z:a.z-tx*s*R},d2=(c.x-cx)**2+(c.z-cz)**2;if(!best||d2>best.d2)best={c,d2}}
    const c=best.c,t0=Math.atan2(a.x-c.x,a.z-c.z),pp=t=>({x:c.x+Math.sin(t)*R,z:c.z+Math.cos(t)*R});
    let dir=1;{const p1=pp(t0+.1);if((p1.x-a.x)*tx+(p1.z-a.z)*tz<0)dir=-1}
-   for(let k=1;k<=K;k++){const p=pp(t0+dir*Math.PI*2*k/K);pts.push([p.x,p.z]);hts.push((a.h||0)+DH*k/K);tags.push(k<K?'espiral':'')}}}
+   for(let k=1;k<=K;k++){const p=pp(t0+dir*Math.PI*2*k/K);pts.push([p.x,p.z]);hts.push((a.h||0)+DH*k/K);tags.push(k<K?'espiral':'')}
+   /* ponto de saída na mesma direção: a pista sai da espiral reta, sem fazer um "S" */
+   const sd=Math.min(R*.5,L*.4);pts.push([a.x+tx*sd,a.z+tz*sd]);hts.push((a.h||0)+DH);tags.push('')}}
  return{pts,hts,tags}}
 function defPista(P){const T=TEMAS[P.tema]||TEMAS.selva,B0=STAGES[P.tema]||STAGES.gelo,X=expandir(P),id='p_'+P.id;
  const usa=[...new Set(P.pts.map(a=>a.m).filter(Boolean))].map(m=>({rampa:'rampas',tunel:'túnel',ponte:'ponte',espiral:'espiral grudenta'})[m]);
@@ -5992,14 +5995,14 @@ function buildAlt(d){const n0=world.children.length,p0=pitMeshes.length;_bt(d);c
   world.add(new THREE.Mesh(g,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.6,side:THREE.DoubleSide})))}
  /* laterais e fundo da pista suspensa (até o chão quando é baixa e não tem pista embaixo) */
  const livre=(i,x,z)=>{for(let j=0;j<N;j+=2){if(Math.abs(ixd(j,i))<20||Math.abs(ixd(i,j))<20)continue;if(HT[j]<HT[i]-3&&(SP[j].x-x)**2+(SP[j].z-z)**2<(hw+6)**2)return false}return true};
- const pos=[],idx=[];let v=0;const addQ=(a,b,c2,d2)=>{pos.push(...a,...b,...c2,...d2);idx.push(v,v+1,v+2,v+1,v+3,v+2,v,v+2,v+1,v+1,v+2,v+3);v+=4};
+ const pos=[],idx=[],nor=[];let v=0;const addQ=(a,b,c2,d2,na,nb)=>{pos.push(...a,...b,...c2,...d2);nor.push(...na,...nb,...na,...nb);idx.push(v,v+1,v+2,v+1,v+3,v+2);v+=4};
  const pil=[];
  const postes=[];for(let i=0;i<N;i++){const j=tSamp(i+1);if(HT[i]<.4&&HT[j]<.4)continue;if(noBuraco(i)||noBuraco(j))continue;if(naPonte(i)){if(i%6===0)postes.push(i);continue}const ed=(k,s)=>{const l=lx(k,s*(hw+1)),p=SP[k],r=RT[k],y=HT[k]+l*TB[k];return[p.x+r.x*l,y,p.z+r.z*l]};
   const fi=k=>{const top=Math.min(ed(k,-1)[1],ed(k,1)[1]);return livre(k,SP[k].x,SP[k].z)&&top<7?-.2:top-1.6};
-  for(const s of[-1,1]){const A=ed(i,s),Bq=ed(j,s);addQ(A,Bq,[A[0],fi(i),A[2]],[Bq[0],fi(j),Bq[2]])}
-  const La=ed(i,-1),Ra=ed(i,1),Lb=ed(j,-1),Rb=ed(j,1);addQ([La[0],fi(i),La[2]],[Lb[0],fi(j),Lb[2]],[Ra[0],fi(i),Ra[2]],[Rb[0],fi(j),Rb[2]]);
+  for(const s of[-1,1]){const A=ed(i,s),Bq=ed(j,s);addQ(A,Bq,[A[0],fi(i),A[2]],[Bq[0],fi(j),Bq[2]],[RT[i].x*s,0,RT[i].z*s],[RT[j].x*s,0,RT[j].z*s])}
+  const La=ed(i,-1),Ra=ed(i,1),Lb=ed(j,-1),Rb=ed(j,1);addQ([La[0],fi(i),La[2]],[Lb[0],fi(j),Lb[2]],[Ra[0],fi(i),Ra[2]],[Rb[0],fi(j),Rb[2]],[0,-1,0],[0,-1,0]);
   if(i%12===0&&HT[i]>6&&livre(i,SP[i].x,SP[i].z))pil.push(i)}
- if(v){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();world.add(new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:LN(d.saia||(d.P&&d.P.tema==='candy'?0xF4A6C8:d.P&&d.P.tema==='fogo'?0x3A2C2A:0x8A94A6)),roughness:.85,side:THREE.DoubleSide})))}
+ if(v){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));g.setIndex(idx);world.add(new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:LN(d.saia||(d.P&&d.P.tema==='candy'?0xF4A6C8:d.P&&d.P.tema==='fogo'?0x3A2C2A:0x8A94A6)),roughness:.85,side:THREE.DoubleSide})))}
  if(pil.length){const pm=new THREE.InstancedMesh(new THREE.CylinderGeometry(2.2,2.8,1,12),new THREE.MeshStandardMaterial({color:LN(0x9AA4B6),roughness:.7}),pil.length);
   pil.forEach((i,n)=>{o.position.set(SP[i].x,(HT[i]-1.6)/2,SP[i].z);o.rotation.set(0,0,0);o.scale.set(1,HT[i]-1.6,1);o.updateMatrix();pm.setMatrixAt(n,o.matrix)});world.add(pm)}
  if(postes.length){const pm=new THREE.InstancedMesh(new THREE.CylinderGeometry(.7,.8,1,8),new THREE.MeshStandardMaterial({color:LN(0x5A3A22),roughness:.9}),postes.length*2);let n=0;
@@ -6286,14 +6289,14 @@ window.PISTAS.leve=leve;
  O Vulcão antigo fica escondido (STAGES.fogo.hidden) e o campeonato passa a usar este. */
 (()=>{if(!window.PISTAS)return;
 const PT=[[-150,230,3,''],[-40,235,3,''],[50,195,3,''],[130,240,3,''],[225,215,4,''],[300,135,7,''],[325,35,12,'tunel'],[305,-65,12,'tunel'],[255,-150,5,''],[160,-200,4,'espiral'],
- [60,-235,18,''],[-40,-235,19,'rampa'],[-140,-220,19,''],[-240,-170,16,''],[-310,-90,12,''],[-320,10,8,''],[-300,90,4,'ponte'],[-260,150,4,''],[-250,215,3,'']];
-const P={id:'vulcao',nome:'VULCÃO MALUCO 2.0',tema:'fogo',pts:PT.map(a=>({x:a[0],z:a[1],h:a[2],m:a[3]}))};
+ [60,-235,30,''],[-40,-235,28,'rampa'],[-140,-220,24,''],[-240,-170,18,''],[-310,-90,12,''],[-320,10,8,''],[-300,90,4,'ponte'],[-260,150,4,''],[-250,215,3,'']];
+const P={id:'vulcao',nome:'VULCÃO MALUCO 2.0',tema:'fogo',espH:36,pts:PT.map(a=>({x:a[0],z:a[1],h:a[2],m:a[3]}))};
 const d=Object.assign(PISTAS.defPista(P),{id:'vulcao',nome:'VULCÃO MALUCO 2.0',ico:'🌋',dif:5,esc:ESC*.85,saia:0x2E2422,editavel:false,
  sub:'Fortaleza, túnel de lava, espiral grudenta, rampa sobre a lava, cratera do dino e ponte que desmorona',
  menu:'túnel de lava · espiral · cratera · ponte',fallMsg:'🔥 CAIU NA LAVA! ⏱ 2s',build:cenVulcao});
 STAGES.vulcao=d;if(STAGES.fogo)STAGES.fogo.hidden=true;{const i=CAMP.indexOf('fogo');if(i>=0)CAMP[i]='vulcao'}
 try{if(localStorage.getItem('mmt_kart_fase')==='fogo')localStorage.setItem('mmt_kart_fase','vulcao')}catch(e){}
-const ex=k=>k+(k>9?10:0),uO=k=>d.uk[ex(k)],LNr=c=>new THREE.Color(c).convertSRGBToLinear(),HT=PISTAS.HT,TB=PISTAS.TB,ts=i=>((i%N)+N)%N;
+const ex=k=>{const e=k+(k>9?10:0);return e>=24?e+1:e},uO=k=>d.uk[ex(k)],LNr=c=>new THREE.Color(c).convertSRGBToLinear(),HT=PISTAS.HT,TB=PISTAS.TB,ts=i=>((i%N)+N)%N;
 const V={on:false,rocks:[],rT:1,ponte:null,emb:0};
 /* chamado logo antes da pista ser montada (já existe a curva): calcula as zonas */
 {const _ba=buildTrack;buildTrack=function(dd){if(dd===d){const u0=(uO(13)+uO(14))/2,u1=(uO(14)+uO(15))/2,i0=Math.round(u0*N),i1=Math.round(u1*N),m=ts(Math.round((i0+i1)/2)),
@@ -6355,7 +6358,7 @@ function cenVulcao(dd){const hw=W/2;V.tochas=[];V.band=[];V.olhos=[];V.fum=[];
    c.position.set(SP[j].x+RT[j].x*l,y-len/2,SP[j].z+RT[j].z*l);c.scale.set(.6+Math.random()*.6,len,.6+Math.random()*.6);c.rotation.x=Math.PI;world.add(c)}
   for(const s of[-1,1])world.add(ribbon(i0,i1,s*(hw+2.2),s*(hw+3.6),.4,new THREE.MeshBasicMaterial({color:0xFF6A1A}),8))});
  /* espiral e rampa */
- (d.esp||[]).forEach(([a])=>placa(a-.03,'ESPIRAL DO VULCÃO','#22D3FF','Sobe em caracol!'));
+ (d.esp||[]).forEach(([a])=>placa(a-.05,'ESPIRAL DO VULCÃO','#22D3FF','Sobe em caracol!'));
  (d.gI||[]).forEach(g=>placa(ts(g.r0-Math.round(30/SEG))/N,'RIO DE LAVA','#FF6B22','Acelere e pule!'));
  /* cratera com o crânio gigante e pontas de pedra */
  {const uc=uO(14),ic=ts(Math.round(uc*N)),t0=TG[ts(ic-10)],t1=TG[ts(ic+10)],turn=wrap(Math.atan2(t1.x,t1.z)-Math.atan2(t0.x,t0.z)),out=-(Math.sign(turn)||1);placa(uO(13),'CRATERA DO DINO','#FFD43B','Olha o tamanho desse crânio!');
@@ -6426,7 +6429,7 @@ window.VULCAO2={d,V};
 (()=>{if(!window.PISTAS||!STAGES.selva)return;
 const PT=[[667,158,0,""],[549,-62,0,""],[235,-101,0,""],[284,-373,0,"espiral"],[15,-441,18,""],[-194,-321,7,""],[-28,-100,0,""],[-38,5,0,""],[-131,78,0,""],[-242,86,0,""],[-299,14,0,"ponte"],[-396,-326,0,""],[-606,-213,1,""],[-490,30,3,""],[-357,241,4,""],[-483,309,5,""],[-636,165,8,""],[-805,61,15,""],[-853,328,30,""],[-768,581,15,""],[-540,608,8,""],[-577,870,4,""],[-381,773,4,""],[-281,500,0,""],[-122,360,0,""],[133,596,0,""],[410,469,0,"rampa"]];
 const P={id:'selva',nome:'SELVA TROPICAL',tema:'selva',espR:100,espH:32,pts:PT.map(a=>({x:a[0],z:a[1],h:a[2],m:a[3]}))};
-const X=PISTAS.expandir(P),EX=k=>{let e=k;for(let i=0;i<k;i++)if(P.pts[i].m==='espiral')e+=14;return e};
+const X=PISTAS.expandir(P),EX=k=>{let e=k;for(let i=0;i<k;i++)if(P.pts[i].m==='espiral')e+=15;return e};
 const d=STAGES.selva;
 Object.assign(d,{pts:X.pts,hts:X.hts,tags:X.tags.map(t=>t==='ponte'?'':t),alt:true,esc:1,W:68,P,tema:'selva',vel:1.45,voltas:2,dif:3,ice:[],gaps:[],atalho:[2,3],
  sub:'Pista longa de alta velocidade: cachoeira, rio, ponte de madeira, jacarés, subida na mata e espiral grudenta',menu:'alta velocidade · cachoeira · espiral · jacarés',
