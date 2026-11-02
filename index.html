@@ -3494,8 +3494,9 @@ function puff(v){const s=v.RC*.4;smokeV.add(v.x+rnd(-s,s),v.H-2,v.z+rnd(-s,s),rn
 on('build',(d,w)=>{if(d.id!=='fogo'&&d.id!=='vulcao')return;const alt=d.id==='vulcao';if(alt){F.bub=null;F.led=null;F.ck=null}
  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;SP.forEach(p=>{x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);z0=Math.min(z0,p.z);z1=Math.max(z1,p.z)});Object.assign(F,{bx0:x0,bx1:x1,bz0:z0,bz1:z1,cx:(x0+x1)/2,cz:(z0+z1)/2});
  LU.nz.value=nzTex();LMf=lavaMat(true);LMn=lavaMat(false);
- F.vol=[vulcao(w,{x:x1+345,z:F.cz+50,R:265,H:235,RC:40,sd:1.3,na:Math.PI,nd:15,rv:[Math.PI,Math.PI-.72,Math.PI+.68,Math.PI-1.45,Math.PI+1.4],lx:-1,lz:.2,sr:8}),
-  vulcao(w,{x:x0-395,z:F.cz+25,R:215,H:185,RC:32,sd:4.1,na:0,nd:12,rv:[0,.8,-.75,1.6],lx:1,lz:-.2,sr:5})];
+ const VP=alt?(()=>{const out=[];for(const R0 of[265,215]){let best=null;for(let D=420;D<1500&&!best;D+=40)for(let k=0;k<24&&!best;k++){const a=k/24*TAU+(out.length?Math.PI:0),x=F.cx+Math.cos(a)*D,z=F.cz+Math.sin(a)*D;let ok=true;for(let i=0;i<N;i+=3)if((SP[i].x-x)**2+(SP[i].z-z)**2<(R0+70)**2){ok=false;break}if(ok&&out.every(o=>Math.hypot(o[0]-x,o[1]-z)>o[2]+R0+40))best=[x,z,R0]}out.push(best||[F.cx+(out.length?-1:1)*1400,F.cz,R0])}return out})():null;
+ F.vol=[vulcao(w,{x:VP?VP[0][0]:x1+345,z:VP?VP[0][1]:F.cz+50,R:265,H:235,RC:40,sd:1.3,na:Math.PI,nd:15,rv:[Math.PI,Math.PI-.72,Math.PI+.68,Math.PI-1.45,Math.PI+1.4],lx:-1,lz:.2,sr:8}),
+  vulcao(w,{x:VP?VP[1][0]:x0-395,z:VP?VP[1][1]:F.cz+25,R:215,H:185,RC:32,sd:4.1,na:0,nd:12,rv:[0,.8,-.75,1.6],lx:1,lz:-.2,sr:5})];
  ceu(w);serras(w);const bub=alt?[]:lavaChao(w);if(!alt)placas(w);
  smokeV=pool(300,smkT,false);fireP=pool(2600,dotT,true);smokeP=pool(600,smkT,false);w.add(smokeV.o,smokeP.o,fireP.o);
  /* brasas: ao longo da pista e em cima da lava */
@@ -5841,7 +5842,7 @@ function lDraw(){const now=performance.now()/1000,dt=Math.min(.05,GA.lt?now-GA.l
 /* volta da corrida (ou do resultado) para a tela de mapa, pronto para correr de novo */
 {const _tm=toMenuOrLobby;toMenuOrLobby=function(){_tm();if(state==='menu'&&RM.on)show('map')}}
 /* teclado: na tela nova o menu antigo não recebe as teclas (F2 = Editor de Cenário continua funcionando) */
-addEventListener('keydown',e=>{if(state!=='menu'||!RM.on||!SM.classList.contains('on')||(window.EDITOR&&EDITOR.on)||(window.PEDIT&&PEDIT.on)||(window.TUT&&TUT.on)||e.code==='F2')return;e.stopImmediatePropagation();if(e.code==='F3')e.preventDefault();
+addEventListener('keydown',e=>{if(state!=='menu'||!RM.on||!SM.classList.contains('on')||(window.EDITOR&&EDITOR.on)||(window.PEDIT&&PEDIT.on)||(window.TUT&&TUT.on)||(window.INSP&&INSP.on)||e.code==='F2')return;e.stopImmediatePropagation();if(e.code==='F3')e.preventDefault();
  if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab','Backspace'].includes(e.code))e.preventDefault();if(LD.classList.contains('on')||e.repeat&&/Enter|Space/.test(e.code))return;unlock();act(e.code)},true);
 function act(c){if(c==='KeyM'){setSom(!RM.snd);return}
  if(RM.scr==='home'){if(c==='ArrowUp'||c==='KeyW'||c==='ArrowLeft')homeSel(RM.hi-1);else if(c==='ArrowDown'||c==='KeyS'||c==='ArrowRight')homeSel(RM.hi+1);
@@ -5865,7 +5866,7 @@ function padNav(){const ps=pads(),now=performance.now(),ev=[];
   if(!A)return;for(let i=0;i<GA.N;i++)if(padOf(i,GA.N)===p){gAct(i,A);return}return}
  if(RM.scr==='home'&&(c==='Escape'||c==='KeyR'))return;if(RM.scr==='map'&&(c==='ArrowLeft'||c==='ArrowRight'))c=c==='ArrowLeft'?'KeyQ':'KeyE';act(c)})}
 {const _pm=padMenu;padMenu=function(){if(state!==RM.ls){if(state==='menu')RM.seed=true;RM.ls=state}
- if(window.TUT&&TUT.on){TUT.pad();return}if(window.PEDIT&&PEDIT.on)return;if(state==='menu'&&RM.on&&SM.classList.contains('on')&&!(window.EDITOR&&EDITOR.on)){hints();padNav();return}_pm()}}
+ if(window.TUT&&TUT.on){TUT.pad();return}if((window.PEDIT&&PEDIT.on)||(window.INSP&&INSP.on))return;if(state==='menu'&&RM.on&&SM.classList.contains('on')&&!(window.EDITOR&&EDITOR.on)){hints();padNav();return}_pm()}}
 hints(true);show('home');
 })();
 
@@ -5935,7 +5936,7 @@ const TEMAS={selva:{nm:'SELVA',ico:'🌴',chao:'#4E9A3E',chao2:'#3E8434',p:'arvo
 /* expande a pista do editor: a ESPIRAL vira uma volta de 360° subindo 14 m (pontos extras) */
 function expandir(P){const pts=[],hts=[],tags=[],n=P.pts.length;let cx=0,cz=0;P.pts.forEach(a=>{cx+=a.x/n;cz+=a.z/n});
  for(let i=0;i<n;i++){const a=P.pts[i],b=P.pts[(i+1)%n];pts.push([a.x,a.z]);hts.push(a.h||0);tags.push(a.m||'');
-  if(a.m==='espiral'){const dx=b.x-a.x,dz=b.z-a.z,L=Math.hypot(dx,dz)||1,tx=dx/L,tz=dz/L,R=P.espR||62,DH=14,K=14;
+  if(a.m==='espiral'){const dx=b.x-a.x,dz=b.z-a.z,L=Math.hypot(dx,dz)||1,tx=dx/L,tz=dz/L,R=P.espR||62,DH=P.espH||14,K=14;
    let best=null;for(const s of[1,-1]){const c={x:a.x+tz*s*R,z:a.z-tx*s*R},d2=(c.x-cx)**2+(c.z-cz)**2;if(!best||d2>best.d2)best={c,d2}}
    const c=best.c,t0=Math.atan2(a.x-c.x,a.z-c.z),pp=t=>({x:c.x+Math.sin(t)*R,z:c.z+Math.cos(t)*R});
    let dir=1;{const p1=pp(t0+.1);if((p1.x-a.x)*tx+(p1.z-a.z)*tz<0)dir=-1}
@@ -6092,6 +6093,7 @@ const peEl=document.createElement('div');peEl.id='pe';peEl.innerHTML=`<div class
  <div class="sec" id="pePt"><b>PONTO SELECIONADO</b><div class="hv"><span id="peN">—</span><span id="peH">ALTURA 0 m</span></div><input type="range" id="peAlt" min="0" max="30" step="1" value="0">
   <div class="row" id="peMk"></div><div class="row"><div class="bt" id="peLarg">🏁 LARGADA AQUI</div><div class="bt" id="peDel">🗑 APAGAR PONTO</div></div></div>
  <div class="sec val" id="peVal"></div>
+ <div class="sec"><b>VER PISTA EM 3D (INSPEÇÃO)</b><select id="peInsp"></select><div class="bt" id="peVer">👁 ENTRAR E OLHAR · V</div></div>
  <div class="sec"><div class="bt go" id="peTest">▶ TESTAR PISTA</div><div class="row"><div class="bt sv" id="peSave">💾 SALVAR</div><div class="bt" id="peFile">⬇ pistas.json</div></div>
   <div class="row"><div class="bt" id="peNova">✚ NOVA</div><div class="bt" id="peApag">✖ EXCLUIR</div><div class="bt" id="peSair">SAIR · ESC</div></div><select id="peAbrir"></select></div>
  <div class="ajuda"><b>Clique</b> no chão: novo ponto (perto da linha: entra no meio) · <b>arraste</b> um ponto para mover · <b>botão direito</b> no ponto: apagar · <b>arraste com o direito</b>: mover a vista · <b>roda</b>: zoom<br>
@@ -6139,6 +6141,7 @@ function peUI(){const P=PE.P;$('peNome').value=P.nome||'';$$('#peTema .bt').forE
  $('pePt').style.opacity=a?1:.45;$('peN').textContent=a?'PONTO '+(PE.sel+1)+' DE '+P.pts.length:'CLIQUE NUM PONTO';$('peH').textContent='ALTURA '+(a?a.h||0:0)+' m';$('peAlt').value=a?a.h||0:0;
  $$('#peMk .bt').forEach(b=>b.classList.toggle('on',!!a&&(a.m||'')===b.dataset.m));
  PE.val=validar(P);$('peVal').innerHTML=PE.val.out.map(o=>`<div class="${o.t}">${o.t==='ok'?'✔':o.t==='w'?'⚠':'✖'} ${o.m}</div>`).join('');
+ if(typeof inLista==='function')inLista();
  $('peAbrir').innerHTML='<option value="">ABRIR PISTA SALVA…</option>'+Object.values(Object.assign({},PST.of,PST.loc)).map(q=>`<option value="${q.id}">${(TEMAS[q.tema]||{}).ico||''} ${q.nome}${PST.loc[q.id]?'':' (site)'}</option>`).join('')}
 function peMut(fn){snapH();fn();peUI();peDraw()}
 const hit=(sx,sy)=>{let b=-1,bd=16*16;PE.P.pts.forEach((a,i)=>{const[x,y]=W2S(a.x,a.z),d=(x-sx)**2+(y-sy)**2;if(d<bd){bd=d;b=i}});return b};
@@ -6181,9 +6184,59 @@ addEventListener('keydown',e=>{if(!PE.on)return;if(e.target&&e.target.tagName===
  else if(/^Digit[1-5]$/.test(c))marcar(Object.keys(MK2)[+c.slice(-1)-1]);
  else if(c==='Delete'||c==='Backspace')$('peDel').click();
  else if(c==='KeyT')peTestar();
+ else if(c==='KeyV')$('peVer').click();
  else if(c==='Tab'){e.preventDefault();PE.sel=(PE.sel+1)%PE.P.pts.length;peUI();peDraw()}},true);
 /* depois de testar (sair da corrida ou terminar), volta para o editor */
 {const _tm=toMenuOrLobby;toMenuOrLobby=function(){_tm();if(PE.voltar&&state==='menu'){const id=PE.voltar;PE.voltar=false;peAbrir(id)}}}
+/* ---------- INSPEÇÃO 3D: entrar em qualquer pista, voar livre e tirar FOTO com a posição carimbada ----------
+ W A S D anda · Q/E desce/sobe · arrastar o mouse gira · Shift rápido · roda muda a velocidade · ←/→ pula 1% pela pista ·
+ K câmera do kart · F (ou o botão) tira foto (baixa PNG com mapa, % da volta, ponto, x/z/altura) · Esc volta ao editor */
+const IN=window.INSP={on:false,cam:new THREE.PerspectiveCamera(62,1,.5,5000),yaw:0,pit:-.25,v:70,k:{},id:null,u:0,kv:false,t:0,inf:''};
+{const s=document.createElement('style');s.textContent=`
+#insp{position:fixed;inset:0;z-index:58;display:none;pointer-events:none;font-family:Inter,'Segoe UI',Arial,sans-serif;color:#fff}#insp.on{display:block}
+#insp .ib{position:absolute;left:1.4vw;top:2vh;padding:1.2vh 1vw;border-radius:1.4vh;background:rgba(10,15,34,.86);border:.25vh solid rgba(255,212,59,.6);font-family:Oxanium,sans-serif;font-weight:700;font-size:1.7vh;line-height:1.55;letter-spacing:.04em;pointer-events:none;white-space:pre}
+#insp .ib b{color:#FFD43B;font-family:Rajdhani,Oxanium,sans-serif;font-size:2.2vh;letter-spacing:.1em}
+#insp .tb{position:absolute;left:50%;bottom:2.4vh;transform:translateX(-50%);display:flex;gap:.6vw;align-items:center;pointer-events:auto;padding:1vh 1vw;border-radius:1.4vh;background:rgba(10,15,34,.86)}
+#insp .tb .bt{padding:.9vh 1.1vw;border-radius:.9vh;cursor:pointer;background:rgba(255,255,255,.09);border:.2vh solid rgba(255,255,255,.2);font-family:Rajdhani,Oxanium,sans-serif;font-weight:700;font-size:1.9vh;letter-spacing:.06em;white-space:nowrap;user-select:none}
+#insp .tb .bt:hover{border-color:#FF6B22}#insp .tb .ft{background:linear-gradient(180deg,#FF9A4D,#FF6B22);border-color:#FFD43B}#insp .tb .on{background:#2E9BFF}
+#insp input[type=range]{width:22vw;accent-color:#FF6B22}
+#insp .aj{position:absolute;right:1.4vw;top:2vh;padding:1vh 1vw;border-radius:1.2vh;background:rgba(10,15,34,.8);font-size:1.4vh;line-height:1.6;color:#C9D3F5;pointer-events:none}#insp .aj b{color:#FFD43B}
+#insp .fl{position:absolute;inset:0;background:#fff;opacity:0;transition:opacity .35s;pointer-events:none}#insp .fl.on{opacity:.8;transition:none}`;document.head.appendChild(s)}
+const inEl=document.createElement('div');inEl.id='insp';inEl.innerHTML=`<div class="fl" id="inFl"></div><div class="ib" id="inInfo"></div>
+ <div class="aj"><b>W A S D</b> anda · <b>Q / E</b> desce / sobe · <b>arrastar</b> gira<br><b>Shift</b> rápido · <b>roda</b> velocidade · <b>← / →</b> pula 1% da pista<br><b>K</b> câmera do kart · <b>F</b> foto · <b>Esc</b> volta</div>
+ <div class="tb"><div class="bt" id="inAnt">◀ 1%</div><input type="range" id="inU" min="0" max="1000" value="0"><div class="bt" id="inProx">1% ▶</div><div class="bt" id="inKart">🚗 CÂMERA DO KART</div><div class="bt ft" id="inFoto">📸 TIRAR FOTO</div><div class="bt" id="inSair">SAIR · ESC</div></div>`;document.body.appendChild(inEl);
+function inInfo(){const c=IN.cam.position;let b=0,bd=1e9;for(let i=0;i<N;i++){const q=(SP[i].x-c.x)**2+(SP[i].z-c.z)**2;if(q<bd){bd=q;b=i}}const lat=(c.x-SP[b].x)*RT[b].x+(c.z-SP[b].z)*RT[b].z,d=STAGES[IN.id];
+ IN.u=b/N;if(document.activeElement!==$('inU'))$('inU').value=Math.round(IN.u*1000);IN.inf=`${d.ico} ${d.nome}  ·  mapa "${IN.id}"\nPONTO DA PISTA: ${(b/N*100).toFixed(1).replace('.',',')}% da volta  (amostra ${b} de ${N})\nlado: ${lat>W/2?'fora, à DIREITA':lat<-W/2?'fora, à ESQUERDA':'em cima da pista'} (${lat.toFixed(0)} m do centro)\nchão da pista: ${(SP[b].y||0).toFixed(1)} m  ·  câmera: ${c.y.toFixed(1)} m de altura\nx ${c.x.toFixed(0)}  z ${c.z.toFixed(0)}  ·  olhando ${Math.round(((IN.yaw*180/Math.PI)%360+360)%360)}°`;
+ $('inInfo').innerHTML='<b>🔎 INSPEÇÃO</b>\n'+IN.inf}
+function inPula(u){u=((u%1)+1)%1;IN.ub=u;const i=Math.round(u*N)%N,t=TG[i],h=Math.atan2(t.x,t.z),y=SP[i].y||0;IN.yaw=h;if(IN.kv){IN.cam.position.set(SP[i].x-t.x*17,y+9.5,SP[i].z-t.z*17);IN.pit=-.22}
+ else{IN.cam.position.set(SP[i].x-t.x*40,y+24,SP[i].z-t.z*40);IN.pit=-.38}inInfo()}
+function inAbrir(id){if(!STAGES[id])return;IN.id=id;const voltaPE=PE.on;if(voltaPE)peFechar();IN.volta=voltaPE;IN.on=true;inEl.classList.add('on');selectStage(id);karts.forEach(k=>{k.g.visible=false});inPula(.005);pmsg2('Carregou '+STAGES[id].nome)}
+function inSair(){IN.on=false;inEl.classList.remove('on');IN.k={};if(IN.volta&&PE.P)peAbrir(PST.loc[PE.P.id]?PE.P.id:null)}
+function pmsg2(t){const e=$('inInfo');if(e)e.innerHTML='<b>🔎 INSPEÇÃO</b>\n'+t}
+function inFoto(){const w=innerWidth,h=innerHeight;inRender(w,h,0);const g=R.domElement,c=document.createElement('canvas');c.width=g.width;c.height=g.height;const x=c.getContext('2d');x.drawImage(g,0,0);
+ const k=c.width/w,lines=('KART RUSH · INSPEÇÃO\n'+IN.inf).split('\n'),fs=Math.round(15*k),lh=fs*1.45,bw=Math.max(...lines.map(l=>{x.font='700 '+fs+'px Oxanium, Segoe UI, Arial';return x.measureText(l).width}))+fs*1.6,bh=lines.length*lh+fs;
+ x.fillStyle='rgba(10,15,34,.85)';x.fillRect(fs*.6,c.height-bh-fs*.6,bw,bh);x.strokeStyle='#FFD43B';x.lineWidth=2*k;x.strokeRect(fs*.6,c.height-bh-fs*.6,bw,bh);
+ lines.forEach((l,i)=>{x.fillStyle=i?'#FFFFFF':'#FFD43B';x.font=(i?'700 ':'800 ')+fs+'px Oxanium, Segoe UI, Arial';x.fillText(l,fs*1.4,c.height-bh-fs*.6+fs*.5+lh*(i+.8))});
+ const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='kartrush_'+IN.id+'_'+(IN.u*100).toFixed(1).replace('.',',')+'pct.png';document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),300);
+ const f=$('inFl');f.classList.add('on');setTimeout(()=>f.classList.remove('on'),60);sfx(1400,.06,'square',.05)}
+function inRender(w,h,dt){const C=IN.cam,K=IN.k,sp=IN.v*(K.ShiftLeft||K.ShiftRight?3:1)*dt,fx=Math.sin(IN.yaw),fz=Math.cos(IN.yaw);
+ if(dt){if(K.KeyW){C.position.x+=fx*sp;C.position.z+=fz*sp}if(K.KeyS){C.position.x-=fx*sp;C.position.z-=fz*sp}if(K.KeyA){C.position.x+=fz*sp;C.position.z-=fx*sp}if(K.KeyD){C.position.x-=fz*sp;C.position.z+=fx*sp}
+  if(K.KeyE)C.position.y+=sp;if(K.KeyQ)C.position.y-=sp;if((IN.t+=dt)>.2){IN.t=0;inInfo()}}
+ C.rotation.set(IN.pit,IN.yaw+Math.PI,0,'YXZ');C.aspect=w/h;C.updateProjectionMatrix();karts.forEach(k=>{k.g.visible=false;if(k.sh)k.sh.visible=false});
+ R.setScissorTest(true);R.setViewport(0,0,w,h);R.setScissor(0,0,w,h);R.render(scene,C)}
+{const _sd=srDraw;srDraw=function(w,h){if(IN.on){const now=performance.now()/1000,dt=Math.min(.05,now-(IN.lt||now));IN.lt=now;inRender(w,h,dt);return true}return _sd(w,h)}}
+addEventListener('keydown',e=>{if(!IN.on)return;e.stopImmediatePropagation();const c=e.code;IN.k[c]=true;if(/Arrow|Space|Tab/.test(c))e.preventDefault();
+ if(c==='Escape')inSair();else if(c==='ArrowRight')inPula(IN.ub+.01);else if(c==='ArrowLeft')inPula(IN.ub-.01);else if(c==='KeyF'||c==='KeyP')inFoto();else if(c==='KeyK')$('inKart').click()},true);
+addEventListener('keyup',e=>{if(IN.on)IN.k[e.code]=false},true);
+addEventListener('mousedown',e=>{if(!IN.on||e.target.closest('#insp .tb'))return;IN.drag={x:e.clientX,y:e.clientY,yaw:IN.yaw,pit:IN.pit}});
+addEventListener('mousemove',e=>{if(!IN.on||!IN.drag)return;IN.yaw=IN.drag.yaw-(e.clientX-IN.drag.x)*.005;IN.pit=clamp(IN.drag.pit-(e.clientY-IN.drag.y)*.005,-1.5,1.2)});
+addEventListener('mouseup',()=>{IN.drag=null});
+addEventListener('wheel',e=>{if(!IN.on)return;IN.v=clamp(IN.v*(e.deltaY<0?1.2:1/1.2),10,600);pmsg2('velocidade da câmera: '+Math.round(IN.v))},{passive:true});
+$('inAnt').onclick=()=>inPula(IN.ub-.01);$('inProx').onclick=()=>inPula(IN.ub+.01);$('inFoto').onclick=inFoto;$('inSair').onclick=inSair;
+$('inKart').onclick=()=>{IN.kv=!IN.kv;$('inKart').classList.toggle('on',IN.kv);inPula(IN.ub)};$('inU').addEventListener('input',e=>inPula(+e.target.value/1000));
+function inLista(){const sel=$('peInsp');if(!sel)return;const ids=Object.keys(STAGES).filter(id=>!STAGES[id].hidden);sel.innerHTML=ids.map(id=>`<option value="${id}">${STAGES[id].ico} ${STAGES[id].nome}</option>`).join('');
+ const cur=PE.P&&STAGES['p_'+PE.P.id]?'p_'+PE.P.id:mapaAtual();if(ids.includes(cur))sel.value=cur}
+$('peVer').addEventListener('click',()=>inAbrir($('peInsp').value));
 window.PISTAS={abrir:peAbrir,validar,expandir,defPista,registrar,PST,hAt,HT,TB,GRU,TEMAS};
 
 /* ---------- MODO LEVE automático ---------- */
@@ -6347,13 +6400,13 @@ window.VULCAO2={d,V};
  espiral grudenta e rampa. Karts 45% mais rápidos neste mapa, 2 voltas. O cenário da Selva (cachoeira com paredão, rio com ponte de madeira,
  jacarés, cortina d'água, tucanos e mata) é reposicionado nos trechos planos deste traçado (Q calculado aqui). */
 (()=>{if(!window.PISTAS||!STAGES.selva)return;
-const PT=[[667,158,0,""],[549,-62,0,""],[235,-101,0,""],[284,-373,0,"espiral"],[15,-441,11,""],[-194,-321,4,""],[-28,-100,0,""],[-38,5,0,""],[-131,78,0,""],[-242,86,0,""],[-299,14,0,"ponte"],[-396,-326,0,""],[-606,-213,1,""],[-490,30,3,""],[-357,241,4,""],[-483,309,5,""],[-636,165,8,""],[-805,61,15,""],[-853,328,30,""],[-768,581,15,""],[-540,608,8,""],[-577,870,4,""],[-381,773,4,""],[-281,500,0,""],[-122,360,0,""],[133,596,0,""],[410,469,0,"rampa"]];
-const P={id:'selva',nome:'SELVA TROPICAL',tema:'selva',espR:100,pts:PT.map(a=>({x:a[0],z:a[1],h:a[2],m:a[3]}))};
+const PT=[[667,158,0,""],[549,-62,0,""],[235,-101,0,""],[284,-373,0,"espiral"],[15,-441,18,""],[-194,-321,7,""],[-28,-100,0,""],[-38,5,0,""],[-131,78,0,""],[-242,86,0,""],[-299,14,0,"ponte"],[-396,-326,0,""],[-606,-213,1,""],[-490,30,3,""],[-357,241,4,""],[-483,309,5,""],[-636,165,8,""],[-805,61,15,""],[-853,328,30,""],[-768,581,15,""],[-540,608,8,""],[-577,870,4,""],[-381,773,4,""],[-281,500,0,""],[-122,360,0,""],[133,596,0,""],[410,469,0,"rampa"]];
+const P={id:'selva',nome:'SELVA TROPICAL',tema:'selva',espR:100,espH:22,pts:PT.map(a=>({x:a[0],z:a[1],h:a[2],m:a[3]}))};
 const X=PISTAS.expandir(P),EX=k=>{let e=k;for(let i=0;i<k;i++)if(P.pts[i].m==='espiral')e+=14;return e};
 const d=STAGES.selva;
 Object.assign(d,{pts:X.pts,hts:X.hts,tags:X.tags.map(t=>t==='ponte'?'':t),alt:true,esc:1,W:68,P,tema:'selva',vel:1.45,voltas:2,dif:3,ice:[],gaps:[],atalho:[2,3],
  sub:'Pista longa de alta velocidade: cachoeira, rio, ponte de madeira, jacarés, subida na mata e espiral grudenta',menu:'alta velocidade · cachoeira · espiral · jacarés',
- qCalc(d){const u=k=>d.uk[EX(k)],ub=(u(10)+u(11))/2,mb=Math.min(.012,(u(11)-u(10))/3),q={c0:u(0)+.03,c1:Math.min(u(2)-.01,u(0)+.11),j:u(7),b0:ub-mb,b1:ub+mb,cort:(u(23)+u(24))/2};
+ qCalc(d){const u=k=>d.uk[EX(k)],ub=(u(10)+u(11))/2,mb=Math.min(.012,(u(11)-u(10))/3),q={c0:u(0)+.03,c1:Math.min(u(2)-.01,u(0)+.11),j:u(7),b0:ub-mb,b1:ub+mb,cort:(()=>{let b=.8,bc=1e9;for(let uu=.58;uu<.9;uu+=.004){const i=Math.round(uu*N),a=Math.max(3,Math.round(60/SEG)),an=v=>Math.atan2(v.x,v.z),c=Math.abs(wrap(an(TG[(i+a)%N])-an(TG[(i-a+N)%N])))+(PISTAS.HT[i]>1?9:0);if(c<bc){bc=c;b=uu}}return b})()};
   const e=(d.esp||[])[0];d.arches=[[.014,'LARGADA · SELVA TROPICAL','#2EAD4B','Bem-vindo à selva!'],[q.c0+.004,'CACHOEIRA GIGANTE','#258BFF','Olha o arco-íris!'],[q.j-.02,'TRILHA DOS JACARÉS','#FF6B22','Cuidado: animais na pista'],
    [q.b0-.012,'PONTE DE MADEIRA','#8A5A2B','Segura firme!'],[u(15),'SUBIDA DA MATA','#2EAD4B','Pé no fundo!']].concat(e?[[e[0]-.02,'ESPIRAL GRUDENTA','#22D3FF','A faixa azul segura o kart!']]:[]).concat([[.95,'RETA FINAL','#FFD43B','Falta pouco!']]);return q}});
 /* alta velocidade: tudo mais rápido neste mapa (robôs também) e menos voltas */
