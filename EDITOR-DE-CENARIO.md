@@ -1,6 +1,7 @@
 # Editor de Cenário
 
 1. **Abrir:** no menu do jogo, clique em **🛠 EDITOR DE CENÁRIO**, ou aperte **F2**. Escolha o mapa na lista do topo.
+   - **Atalho pela inspeção 3D:** voando no **VER PISTA EM 3D**, aperte **G** ou clique em **🛠 EDITAR AQUI**. O editor abre no mesmo mapa, com a câmera no mesmo ponto.
 2. **Escolher:** clique num objeto (árvore, pedra, placa, casa, navio…). Ele fica marcado com uma caixa amarela.
 3. **Mexer:**
    - **Mover (G):** arraste as setas.
@@ -9,7 +10,9 @@
    - **Duplicar:** Ctrl+D.
    - **Apagar:** Del.
    - **Desfazer:** Ctrl+Z.
-4. **Adicionar:** na lista à esquerda, clique num modelo pirata. Ele aparece na frente da câmera.
+4. **Adicionar:**
+   - **Deste mapa:** escolha qualquer objeto do cenário (árvore, pedra, placa…) e clique em **📌 Guardar o escolhido**. Dê um nome. A partir daí, cada clique nesse nome coloca uma cópia na frente da câmera, com o mesmo tamanho e giro. O ✕ tira do catálogo. O catálogo fica guardado no seu navegador.
+   - **Piratas:** na lista de baixo, clique num modelo pirata. Ele aparece na frente da câmera.
 5. **Andar com a câmera:**
    - W A S D ou setas para andar;
    - Q / E para descer / subir;

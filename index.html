@@ -5093,7 +5093,7 @@ const ui=document.createElement('div');ui.id='edui';ui.innerHTML=`<div class="ed
  <button data-a="translate" class="on">✥ Mover (G)</button><button data-a="rotate">⟳ Girar (R)</button><button data-a="scale">⤢ Tamanho (T)</button>
  <button data-a="dup">⧉ Duplicar (Ctrl+D)</button><button data-a="del">🗑 Apagar (Del)</button><button data-a="undo">↶ Desfazer (Ctrl+Z)</button>
  <button data-a="salvar" class="pri">💾 Salvar arquivo</button><button data-a="desc" class="perigo">Desfazer tudo deste mapa</button><button data-a="sair">✕ Sair (Esc)</button></div>
- <div class="edcat"><h4>ADICIONAR</h4><small>Clique para colocar na frente da câmera.</small><div id="edlista"></div><small>Os modelos só aparecem pelo site (Netlify), não abrindo o arquivo direto do computador.</small></div>
+ <div class="edcat"><h4>DESTE MAPA</h4><small>Escolha um objeto do cenário e clique em 📌 Guardar. Depois é só clicar aqui para colocar cópias.</small><button data-a="guardar" class="pri">📌 Guardar o escolhido</button><div id="edpal"></div><h4>ADICIONAR (PIRATAS)</h4><small>Clique para colocar na frente da câmera.</small><div id="edlista"></div><small>Os modelos só aparecem pelo site (Netlify), não abrindo o arquivo direto do computador.</small></div>
  <div class="edinfo" id="edinfo"></div><div class="edmsg" id="edmsg"></div>
  <div class="edhelp">Clique: escolher · Botão direito + arrastar: olhar · W A S D / setas: andar · Q / E: descer / subir · Roda: frente / trás · Shift: rápido · F: ir até o escolhido · Esc: sair</div>`;
 document.body.appendChild(ui);ED.ui=ui;
@@ -5103,21 +5103,22 @@ const msg=t=>{const m=ui.querySelector('#edmsg');m.textContent=t;m.classList.add
 {const l=document.querySelector('#sMenu .links');if(l){const b=document.createElement('span');b.className='help';b.id='bedit';b.textContent='🛠 EDITOR DE CENÁRIO · F2';b.style.marginLeft='10px';b.onclick=()=>abrir();l.appendChild(b)}}
 /* ---------- abrir / fechar ---------- */
 function libTC(cb){if(THREE.TransformControls)return cb();const s=document.createElement('script');s.src='libs/TransformControls.js';s.onload=cb;s.onerror=cb;document.head.appendChild(s)}
-function abrir(){if(ED.on||state!=='menu')return;libTC(()=>{ED.on=true;state='editor';document.body.classList.add('edon');ED.mapa=mapaAtual();
+function abrir(em){if(ED.on||state!=='menu')return;libTC(()=>{ED.on=true;state='editor';document.body.classList.add('edon');ED.mapa=em&&STAGES[em.id]?em.id:mapaAtual();
  const sel=ui.querySelector('#edmapa');sel.innerHTML=mapas().map(id=>`<option value="${id}">${STAGES[id].ico} ${STAGES[id].nome}</option>`).join('');sel.value=ED.mapa;
  if(!ED.cam)ED.cam=new THREE.PerspectiveCamera(60,1,.5,4000);
  if(THREE.TransformControls&&!ED.tc){ED.tc=new THREE.TransformControls(ED.cam,R.domElement);ED.tc.setSize(1.1);scene.add(ED.tc);scene.add(ED.proxy);
   ED.tc.addEventListener('dragging-changed',e=>{if(e.value)guardaHist()});ED.tc.addEventListener('objectChange',mudouProxy)}
  if(!ED.tc)msg('Não deu para carregar as setas do editor (libs/TransformControls.js).');
- irMapa(ED.mapa)})}
+ irMapa(ED.mapa);if(em&&em.pos){ED.cam.position.copy(em.pos);ED.yaw=em.yaw;ED.pit=em.pit}paleta()})}
 function fechar(){if(!ED.on)return;solta();ED.on=false;document.body.classList.remove('edon');state='menu';refreshSel();if(ED.tc)ED.tc.detach();for(const k in keys)keys[k]=false}
 function irMapa(id){solta();ED.mapa=id;selectStage(id);ED.hist=[];const cx=(mmB.x0+mmB.x1)/2,cz=(mmB.z0+mmB.z1)/2;ED.cam.position.set(cx,330,cz+(mmB.z1-mmB.z0)*.95);ED.yaw=0;ED.pit=-.85;info()}
 ui.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.a;
+ if(b.dataset.pd!=null){tiraPal(+b.dataset.pd);return}if(b.dataset.p!=null){poePal(+b.dataset.p);return}if(a==='guardar'){guardaPal();return}
  if(b.dataset.m){adicionar(b.dataset.m);return}
  if(a==='translate'||a==='rotate'||a==='scale')modo(a);else if(a==='dup')duplicar();else if(a==='del')apagar();else if(a==='undo')desfazer();
  else if(a==='salvar')baixar();else if(a==='desc'){if(confirm('Desfazer TODAS as mudanças deste mapa (volta ao cenário original do site)?')){guardaHist();delete ED.rasc[ED.mapa];salvaRasc();solta();aplicaTudo(ST);info();msg('Mapa voltou ao original')}}
  else if(a==='sair')fechar()});
-ui.querySelector('#edmapa').addEventListener('change',e=>{irMapa(e.target.value);e.target.blur()});
+ui.querySelector('#edmapa').addEventListener('change',e=>{irMapa(e.target.value);paleta();e.target.blur()});
 function modo(m){ED.modo=m;ui.querySelectorAll('[data-a="translate"],[data-a="rotate"],[data-a="scale"]').forEach(b=>b.classList.toggle('on',b.dataset.a===m));const tc=ED.tc;if(!tc)return;
  tc.setMode(m);tc.showX=tc.showZ=m!=='rotate';tc.showY=true;tc.setSpace(m==='rotate'?'world':'world')}
 /* ---------- escolher ---------- */
@@ -5163,6 +5164,17 @@ function duplicar(){const s=ED.sel;if(!s){msg('Escolha um objeto primeiro');retu
  base={p:[+(p.position.x+dx.x).toFixed(2),+p.position.y.toFixed(2),+(p.position.z+dx.z).toFixed(2)],dr:+p.rotation.y.toFixed(4),k:+p.scale.x.toFixed(3)};
  if(s.tipo==='add'){const a=Object.assign({},efetivo(ED.mapa).add[s.idx],base);novoAdd(a)}
  else novoAdd(Object.assign({from:s.key},base));msg('Duplicado')}
+/* catálogo "deste mapa": objetos do cenário guardados para colocar cópias (fica neste navegador) */
+let PAL={};try{PAL=JSON.parse(localStorage.getItem('kr_paleta')||'{}')||{}}catch(e){PAL={}}
+const salvaPal=()=>{try{localStorage.setItem('kr_paleta',JSON.stringify(PAL))}catch(e){}};
+function paleta(){const el=ui.querySelector('#edpal');if(!el)return;const L=PAL[ED.mapa]||[];
+ el.innerHTML=L.length?L.map((x,i)=>`<div style="display:flex;gap:4px"><button data-p="${i}" style="flex:1">${x.nome.replace(/</g,'')}</button><button data-pd="${i}" title="tirar do catálogo" style="width:auto">✕</button></div>`).join(''):'<small>(vazio)</small>'}
+function guardaPal(){const s=ED.sel;if(!s){msg('Escolha um objeto primeiro');return}let mod;
+ if(s.tipo==='add'){const a=efetivo(ED.mapa).add[s.idx];mod=a.m?{m:a.m}:{from:a.from}}else mod={from:s.key};
+ const nome=prompt('Nome para este objeto no catálogo:',s.tipo==='add'?(s.o.userData.nome||'objeto'):'objeto '+s.key);if(!nome)return;
+ const L=PAL[ED.mapa]=PAL[ED.mapa]||[];L.push(Object.assign({nome,k:+ED.proxy.scale.x.toFixed(3),dr:+ED.proxy.rotation.y.toFixed(4),y:+ED.proxy.position.y.toFixed(2)},mod));salvaPal();paleta();msg('Guardado: '+nome)}
+function poePal(i){const x=(PAL[ED.mapa]||[])[i];if(!x)return;const p=frente(),a={p:[+p.x.toFixed(2),x.y||0,+p.z.toFixed(2)],dr:x.dr||0,k:x.k||1};if(x.m)a.m=x.m;else a.from=x.from;novoAdd(a);msg(x.nome+' colocado')}
+function tiraPal(i){const L=PAL[ED.mapa]||[];L.splice(i,1);salvaPal();paleta()}
 function baixar(){const tudo=JSON.parse(JSON.stringify(ED.oficial||{}));Object.entries(ED.rasc).forEach(([id,e])=>tudo[id]=e);
  Object.keys(tudo).forEach(id=>{const e=tudo[id];if(!e||(!Object.keys(e.obj||{}).length&&!(e.add||[]).length))delete tudo[id]});
  const blob=new Blob([JSON.stringify(tudo,null,1)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='cenarios.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
@@ -5192,7 +5204,7 @@ on('visuals',dt=>{if(!ED.on||!ED.cam)return;const c=ED.cam,k=ED.k,sp=(k.ShiftLef
  c.rotation.set(ED.pit,ED.yaw,0,'YXZ');const f=new V3(-Math.sin(ED.yaw),0,-Math.cos(ED.yaw)),r=new V3(Math.cos(ED.yaw),0,-Math.sin(ED.yaw));
  if(k.KeyW||k.ArrowUp)c.position.addScaledVector(f,sp);if(k.KeyS||k.ArrowDown)c.position.addScaledVector(f,-sp);if(k.KeyD||k.ArrowRight)c.position.addScaledVector(r,sp);if(k.KeyA||k.ArrowLeft)c.position.addScaledVector(r,-sp);
  if(k.KeyE)c.position.y+=sp;if(k.KeyQ)c.position.y=Math.max(2,c.position.y-sp)});
-ED.api={abrir,fechar,irMapa,escolher,seleciona,mudouProxy,apagar,duplicar,adicionar,desfazer,baixar,modo,guardaHist,aplicaTudo};
+ED.api={paleta,abrir,fechar,irMapa,escolher,seleciona,mudouProxy,apagar,duplicar,adicionar,desfazer,baixar,modo,guardaHist,aplicaTudo};
 Object.values(STAGES).forEach(d=>{if(d.world){marcar(d.world);aplicaTudo(d)}});
 {const _d=draw;draw=function(){if(ED.on&&ED.cam){const w=innerWidth,h=innerHeight;R.setScissorTest(false);R.setViewport(0,0,w,h);ED.cam.aspect=w/h;ED.cam.updateProjectionMatrix();R.render(scene,ED.cam);return}_d()}}
 })();
@@ -6205,7 +6217,7 @@ body.inspon #sMenu,body.inspon #sLobby,body.inspon #sEnd,body.inspon .pv,body.in
 #insp .fl{position:absolute;inset:0;background:#fff;opacity:0;transition:opacity .35s;pointer-events:none}#insp .fl.on{opacity:.8;transition:none}`;document.head.appendChild(s)}
 const inEl=document.createElement('div');inEl.id='insp';inEl.innerHTML=`<div class="fl" id="inFl"></div><div class="ib" id="inInfo"></div>
  <div class="aj"><b>W A S D</b> voa para onde olha · <b>Q/E</b> ou <b>Ctrl/Espaço</b> desce/sobe · <b>arrastar</b> gira<br><b>Shift</b> rápido · <b>roda</b> velocidade · <b>← / →</b> pula 1% da pista<br><b>K</b> câmera do kart · <b>F</b> foto · <b>Esc</b> volta</div>
- <div class="tb"><div class="bt" id="inAnt">◀ 1%</div><input type="range" id="inU" min="0" max="1000" value="0"><div class="bt" id="inProx">1% ▶</div><div class="bt" id="inKart">🚗 CÂMERA DO KART</div><div class="bt ft" id="inFoto">📸 TIRAR FOTO</div><div class="bt" id="inSair">SAIR · ESC</div></div>`;document.body.appendChild(inEl);
+ <div class="tb"><div class="bt" id="inAnt">◀ 1%</div><input type="range" id="inU" min="0" max="1000" value="0"><div class="bt" id="inProx">1% ▶</div><div class="bt" id="inKart">🚗 CÂMERA DO KART</div><div class="bt ft" id="inFoto">📸 TIRAR FOTO</div><div class="bt" id="inEdit">🛠 EDITAR AQUI · G</div><div class="bt" id="inSair">SAIR · ESC</div></div>`;document.body.appendChild(inEl);
 function inInfo(){const c=IN.cam.position;let b=0,bd=1e9;for(let i=0;i<N;i++){const q=(SP[i].x-c.x)**2+(SP[i].z-c.z)**2;if(q<bd){bd=q;b=i}}const lat=(c.x-SP[b].x)*RT[b].x+(c.z-SP[b].z)*RT[b].z,d=STAGES[IN.id];
  IN.u=b/N;if(document.activeElement!==$('inU'))$('inU').value=Math.round(IN.u*1000);IN.inf=`${d.ico} ${d.nome}  ·  mapa "${IN.id}"\nPONTO DA PISTA: ${(b/N*100).toFixed(1).replace('.',',')}% da volta  (amostra ${b} de ${N})\nlado: ${lat>W/2?'fora, à DIREITA':lat<-W/2?'fora, à ESQUERDA':'em cima da pista'} (${lat.toFixed(0)} m do centro)\nchão da pista: ${(SP[b].y||0).toFixed(1)} m  ·  câmera: ${c.y.toFixed(1)} m de altura\nx ${c.x.toFixed(0)}  z ${c.z.toFixed(0)}  ·  olhando ${Math.round(((IN.yaw*180/Math.PI)%360+360)%360)}°`;
  $('inInfo').innerHTML='<b>🔎 INSPEÇÃO</b>\n'+IN.inf}
@@ -6213,6 +6225,8 @@ function inPula(u){u=((u%1)+1)%1;IN.ub=u;const i=Math.round(u*N)%N,t=TG[i],h=Mat
  else{IN.cam.position.set(SP[i].x-t.x*40,y+24,SP[i].z-t.z*40);IN.pit=-.38}inInfo()}
 function inAbrir(id){if(!STAGES[id])return;IN.id=id;const voltaPE=PE.on;if(voltaPE)peFechar();IN.volta=voltaPE;IN.on=true;inEl.classList.add('on');document.body.classList.add('inspon');selectStage(id);karts.forEach(k=>{k.g.visible=false});inPula(.005);pmsg2('Carregou '+STAGES[id].nome)}
 function inSair(){IN.on=false;inEl.classList.remove('on');document.body.classList.remove('inspon');IN.k={};if(IN.volta&&PE.P)peAbrir(PST.loc[PE.P.id]?PE.P.id:null)}
+function inEditar(){const E=window.EDITOR;if(!E||!E.api)return;const em={id:IN.id,pos:IN.cam.position.clone(),yaw:IN.yaw+Math.PI,pit:IN.pit};IN.volta=false;inSair();if(PE.on)peFechar();
+ if(state!=='menu'){pmsg2('Volte ao menu para editar');return}E.api.abrir(em)}
 function pmsg2(t){const e=$('inInfo');if(e)e.innerHTML='<b>🔎 INSPEÇÃO</b>\n'+t}
 function inFoto(){const w=innerWidth,h=innerHeight;inRender(w,h,0);const g=R.domElement,c=document.createElement('canvas');c.width=g.width;c.height=g.height;const x=c.getContext('2d');x.drawImage(g,0,0);
  const k=c.width/w,lines=('KART RUSH · INSPEÇÃO\n'+IN.inf).split('\n'),fs=Math.round(15*k),lh=fs*1.45,bw=Math.max(...lines.map(l=>{x.font='700 '+fs+'px Oxanium, Segoe UI, Arial';return x.measureText(l).width}))+fs*1.6,bh=lines.length*lh+fs;
@@ -6227,13 +6241,13 @@ function inRender(w,h,dt){const C=IN.cam,K=IN.k,sp=IN.v*(K.ShiftLeft||K.ShiftRig
  R.setScissorTest(true);R.setViewport(0,0,w,h);R.setScissor(0,0,w,h);R.render(scene,C)}
 {const _sd=srDraw;srDraw=function(w,h){if(IN.on){const now=performance.now()/1000,dt=Math.min(.05,now-(IN.lt||now));IN.lt=now;inRender(w,h,dt);return true}return _sd(w,h)}}
 addEventListener('keydown',e=>{if(!IN.on)return;e.stopImmediatePropagation();const c=e.code;IN.k[c]=true;if(/Arrow|Space|Tab/.test(c))e.preventDefault();
- if(c==='Escape')inSair();else if(c==='ArrowRight')inPula(IN.ub+.01);else if(c==='ArrowLeft')inPula(IN.ub-.01);else if(c==='KeyF'||c==='KeyP')inFoto();else if(c==='KeyK')$('inKart').click()},true);
+ if(c==='Escape')inSair();else if(c==='ArrowRight')inPula(IN.ub+.01);else if(c==='ArrowLeft')inPula(IN.ub-.01);else if(c==='KeyF'||c==='KeyP')inFoto();else if(c==='KeyK')$('inKart').click();else if(c==='KeyG')inEditar()},true);
 addEventListener('keyup',e=>{if(IN.on)IN.k[e.code]=false},true);
 addEventListener('mousedown',e=>{if(!IN.on||e.target.closest('#insp .tb'))return;IN.drag={x:e.clientX,y:e.clientY,yaw:IN.yaw,pit:IN.pit}});
 addEventListener('mousemove',e=>{if(!IN.on||!IN.drag)return;IN.yaw=IN.drag.yaw-(e.clientX-IN.drag.x)*.005;IN.pit=clamp(IN.drag.pit-(e.clientY-IN.drag.y)*.005,-1.5,1.2)});
 addEventListener('mouseup',()=>{IN.drag=null});
 addEventListener('wheel',e=>{if(!IN.on)return;IN.v=clamp(IN.v*(e.deltaY<0?1.2:1/1.2),10,600);pmsg2('velocidade da câmera: '+Math.round(IN.v))},{passive:true});
-$('inAnt').onclick=()=>inPula(IN.ub-.01);$('inProx').onclick=()=>inPula(IN.ub+.01);$('inFoto').onclick=inFoto;$('inSair').onclick=inSair;
+$('inAnt').onclick=()=>inPula(IN.ub-.01);$('inProx').onclick=()=>inPula(IN.ub+.01);$('inFoto').onclick=inFoto;$('inEdit').onclick=inEditar;$('inSair').onclick=inSair;
 $('inKart').onclick=()=>{IN.kv=!IN.kv;$('inKart').classList.toggle('on',IN.kv);inPula(IN.ub)};$('inU').addEventListener('input',e=>inPula(+e.target.value/1000));
 function inLista(){const sel=$('peInsp');if(!sel)return;const ids=Object.keys(STAGES).filter(id=>!STAGES[id].hidden);sel.innerHTML=ids.map(id=>`<option value="${id}">${STAGES[id].ico} ${STAGES[id].nome}</option>`).join('');
  const cur=PE.P&&STAGES['p_'+PE.P.id]?'p_'+PE.P.id:mapaAtual();if(ids.includes(cur))sel.value=cur}
