@@ -3383,14 +3383,17 @@ function vulcao(w,o){const{x:cx,z:cz,R,H,RC}=o,sd=o.sd,NS=120,NR=42;
  const spr=(col,op,s,y)=>{const m=new THREE.Sprite(new THREE.SpriteMaterial({map:glowT,color:col,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false,fog:false,opacity:op}));m.scale.set(s,s,1);m.position.set(cx,y,cz);w.add(m);return m};
  return{x:cx,z:cz,R,H,RC,sr:o.sr,g1:spr(0xFF7A30,.9,RC*4.5,H+10),g2:spr(0xFF4A10,.32,H*3.2,H*.75),s1:RC*4.5,boost:0,se:0,hAt}}
 /* ---------- cordilheira escura em volta de tudo + vulcõezinhos no horizonte (1 malha só) ---------- */
-function serras(w){const pos=[],ix=[],gl=[],fc=new THREE.Color(FOGC),c=new THREE.Color(),L=new THREE.Vector3(-.3,1,.4).normalize(),NA=300,NT=9,s1=rnd(0,9),s2=rnd(0,9),s3=rnd(0,9);let q=0;
+function serras(w,alt){const pos=[],ix=[],gl=[],fc=new THREE.Color(FOGC),c=new THREE.Color(),L=new THREE.Vector3(-.3,1,.4).normalize(),NA=300,NT=9,s1=rnd(0,9),s2=rnd(0,9),s3=rnd(0,9);let q=0;
  const vd=F.vol.map(v=>Math.atan2(v.z-F.cz,v.x-F.cx));
  for(let i=0;i<=NT;i++){const t=i/NT;for(let j=0;j<NA;j++){const a=j/NA*TAU,b=a+t*.25,rd=(1+.07*Math.sin(3*a+s1))*(1+t*.6);
    let hb=95+55*Math.abs(Math.sin(b*5+s1))+40*Math.abs(Math.sin(b*11+s2))+22*Math.abs(Math.sin(b*23+s3));vd.forEach(d=>{hb*=1-.7*Math.exp(-Math.pow(wrap(a-d)/.32,2))});
    const pr=i===0||i===NT?-4:hb*Math.pow(Math.sin(Math.PI*Math.min(1,t*1.35)),.8)*(t>.74?1-(t-.74)/.26*.6:1);pos.push(F.cx+Math.cos(a)*760*rd,pr,F.cz+Math.sin(a)*600*rd);gl.push(pr/260,0);q++}}
  for(let i=0;i<NT;i++)for(let j=0;j<NA;j++){const a=i*NA+j,b=i*NA+(j+1)%NA;ix.push(a,b,a+NA,b,b+NA,a+NA)}
  /* vulcõezinhos na frente da cordilheira */
- [[.5*Math.PI+.35,560,90],[1.5*Math.PI-.4,500,75],[.5*Math.PI-.6,600,70]].forEach(([an,d,H])=>{const cx=F.cx+Math.cos(an)*d*1.15,cz=F.cz+Math.sin(an)*d*.85,R=H*1.7,NS=40,NR=10,base=q,sd=rnd(0,9);
+ /* no Vulcão 2.0 o traçado é outro: cada vulcãozinho procura um lugar longe da pista (sem passar por cima dela) */
+ const livre=(x,z,m)=>{for(let i=0;i<N;i+=2)if((SP[i].x-x)**2+(SP[i].z-z)**2<m*m)return false;return true};
+ [[.5*Math.PI+.35,560,90],[1.5*Math.PI-.4,500,75],[.5*Math.PI-.6,600,70]].forEach(([an,d,H])=>{let cx=F.cx+Math.cos(an)*d*1.15,cz=F.cz+Math.sin(an)*d*.85;const R=H*1.7,NS=40,NR=10,base=q,sd=rnd(0,9);
+  if(alt&&!livre(cx,cz,R+W/2+30)){let ok=false;for(let k=0;k<16&&!ok;k++)for(const da of[0,.12,-.12,.25,-.25]){const a=an+da,f=1+k*.08,x=F.cx+Math.cos(a)*d*1.15*f,z=F.cz+Math.sin(a)*d*.85*f;if(livre(x,z,R+W/2+30)){cx=x;cz=z;ok=true;break}}}
   for(let i=0;i<=NR;i++){const u=i/NR;for(let j=0;j<NS;j++){const a=j/NS*TAU,r=u*R*(1+.15*Math.sin(2*a+sd)+.08*Math.sin(5*a+sd)),h=i===NR?-3:u<.15?H-9*(1-u/.15):H*Math.pow(1-(u-.15)/.85,1.4)*(1+.1*Math.sin(a*7+sd)*u);pos.push(cx+Math.cos(a)*r,h,cz+Math.sin(a)*r);gl.push(h/H,u<.24?(1-u/.24):0);q++}}
   for(let i=0;i<NR;i++)for(let j=0;j<NS;j++){const a=base+i*NS+j,b=base+i*NS+(j+1)%NS;ix.push(a,b,a+NS,b,b+NS,a+NS)}
   const m=new THREE.Sprite(new THREE.SpriteMaterial({map:glowT,color:0xFF5A18,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false,fog:false,opacity:.65}));m.scale.set(H*1.1,H*1.1,1);m.position.set(cx,H+4,cz);w.add(m)});
@@ -3497,7 +3500,7 @@ on('build',(d,w)=>{if(d.id!=='fogo'&&d.id!=='vulcao')return;const alt=d.id==='vu
  const VP=alt?(()=>{const out=[];for(const R0 of[265,215]){let best=null;for(let D=420;D<1500&&!best;D+=40)for(let k=0;k<24&&!best;k++){const a=k/24*TAU+(out.length?Math.PI:0),x=F.cx+Math.cos(a)*D,z=F.cz+Math.sin(a)*D;let ok=true;for(let i=0;i<N;i+=3)if((SP[i].x-x)**2+(SP[i].z-z)**2<(R0+70)**2){ok=false;break}if(ok&&out.every(o=>Math.hypot(o[0]-x,o[1]-z)>o[2]+R0+40))best=[x,z,R0]}out.push(best||[F.cx+(out.length?-1:1)*1400,F.cz,R0])}return out})():null;
  F.vol=[vulcao(w,{x:VP?VP[0][0]:x1+345,z:VP?VP[0][1]:F.cz+50,R:265,H:235,RC:40,sd:1.3,na:Math.PI,nd:15,rv:[Math.PI,Math.PI-.72,Math.PI+.68,Math.PI-1.45,Math.PI+1.4],lx:-1,lz:.2,sr:8}),
   vulcao(w,{x:VP?VP[1][0]:x0-395,z:VP?VP[1][1]:F.cz+25,R:215,H:185,RC:32,sd:4.1,na:0,nd:12,rv:[0,.8,-.75,1.6],lx:1,lz:-.2,sr:5})];
- ceu(w);serras(w);const bub=alt?[]:lavaChao(w);if(!alt)placas(w);
+ ceu(w);serras(w,alt);const bub=alt?[]:lavaChao(w);if(!alt)placas(w);
  smokeV=pool(300,smkT,false);fireP=pool(2600,dotT,true);smokeP=pool(600,smkT,false);w.add(smokeV.o,smokeP.o,fireP.o);
  /* brasas: ao longo da pista e em cima da lava */
  const ep=[],es=[];for(let i=0;i<3000;i++){let x,z;if(i<2300||!bub.length){const j=Math.random()*N|0,l=rnd(-(W/2+45),W/2+45);x=SP[j].x+RT[j].x*l;z=SP[j].z+RT[j].z*l}else{const b=bub[Math.random()*bub.length|0];x=b[0]+rnd(-12,12);z=b[2]+rnd(-12,12)}ep.push(x,rnd(0,60),z);es.push(Math.random(),Math.random(),Math.random(),Math.random())}
@@ -6331,11 +6334,11 @@ function cenVulcao(dd){const hw=W/2;V.tochas=[];V.band=[];V.olhos=[];V.fum=[];
    world.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),16,.12,4),corda))}}
  /* vulcões, céu e cordilheira: os do Vulcão antigo (EXTRA · FOGO monta para 'vulcao' também) */
  /* FORTALEZA na largada: muralhas com ameias, torres, portão, bandeiras e tochas */
- const iA=ts(Math.round(-.03*N)),iB=Math.round(.045*N);for(let s0=-Math.round(.03*N);s0<iB;s0+=3){const i=ts(s0);for(const s of[-1,1]){const l=s*(hw+11),x=SP[i].x+RT[i].x*l,z=SP[i].z+RT[i].z*l,j=ts(i+3),x2=SP[j].x+RT[j].x*l,z2=SP[j].z+RT[j].z*l,L=Math.hypot(x2-x,z2-z),h=Math.atan2(x2-x,z2-z);
+ const iA=ts(Math.round(-.03*N)),iB=Math.round(.045*N);for(let s0=-Math.round(.03*N);s0<iB;s0+=3){const i=ts(s0);for(const s of[-1,1]){const l=s*(hw+5),x=SP[i].x+RT[i].x*l,z=SP[i].z+RT[i].z*l,j=ts(i+3),x2=SP[j].x+RT[j].x*l,z2=SP[j].z+RT[j].z*l,L=Math.hypot(x2-x,z2-z),h=Math.atan2(x2-x,z2-z);
   const w=new THREE.Mesh(chGeo('vmu',()=>new THREE.BoxGeometry(3,1,1)),pedraC);w.position.set((x+x2)/2,(HT[i]+14)/2,(z+z2)/2);w.scale.set(1,HT[i]+14,L+.2);w.rotation.y=h;world.add(w);
   const m=new THREE.Mesh(chGeo('vam',()=>new THREE.BoxGeometry(3.4,2.6,2)),pedra);m.position.set((x+x2)/2,HT[i]+15.3,(z+z2)/2);m.rotation.y=h;world.add(m);
-  if(i%9===0)tocha(SP[i].x+RT[i].x*s*(hw+6),HT[i],SP[i].z+RT[i].z*s*(hw+6));if(i%12===0)bandeira(x,HT[i]+15,z,h+Math.PI/2*s,s>0?0xD9313F:0xFF7A00)}}
- [[iA,1],[iA,-1],[ts(iB),1],[ts(iB),-1]].forEach(([i,s])=>{const l=s*(hw+12),x=SP[i].x+RT[i].x*l,z=SP[i].z+RT[i].z*l,t=new THREE.Mesh(chGeo('vto',()=>new THREE.CylinderGeometry(7,8,1,9)),pedraC);t.position.set(x,(HT[i]+26)/2,z);t.scale.y=HT[i]+26;world.add(t);
+  if(i%9===0)tocha(SP[i].x+RT[i].x*s*(hw+2.6),HT[i],SP[i].z+RT[i].z*s*(hw+2.6));if(i%12===0)bandeira(x,HT[i]+15,z,h+Math.PI/2*s,s>0?0xD9313F:0xFF7A00)}}
+ [[iA,1],[iA,-1],[ts(iB),1],[ts(iB),-1]].forEach(([i,s])=>{const l=s*(hw+12.5),x=SP[i].x+RT[i].x*l,z=SP[i].z+RT[i].z*l,t=new THREE.Mesh(chGeo('vto',()=>new THREE.CylinderGeometry(7,8,1,9)),pedraC);t.position.set(x,(HT[i]+26)/2,z);t.scale.y=HT[i]+26;world.add(t);
   const r=new THREE.Mesh(chGeo('vtr',()=>new THREE.ConeGeometry(9,10,9)),S(0x7A1E14));r.position.set(x,HT[i]+31,z);world.add(r);bandeira(x,HT[i]+35,z,0,0xFFD43B)});
  placa(.036,'FORTALEZA VULCÂNICA','#FF6B22','Segura o calor!');
  /* curvas técnicas entre as rochas */
