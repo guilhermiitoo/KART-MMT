@@ -3491,20 +3491,23 @@ function boom(b){const x=b.tx,z=b.tz;b.on=false;b.g.visible=false;b.rg.visible=f
 function clr(all){F.balls.forEach(b=>{b.on=false;b.g.visible=false;b.rg.visible=false});if(all){F.fx.forEach(e=>{e.t=9;e.fl.visible=e.wv.visible=e.sc.visible=false});fireP&&fireP.clear();smokeP&&smokeP.clear()}F.fb=5.5}
 function puff(v){const s=v.RC*.4;smokeV.add(v.x+rnd(-s,s),v.H-2,v.z+rnd(-s,s),rnd(3,7),rnd(12,18),rnd(-2.5,2.5),rnd(12,16),rnd(v.RC*.9,v.RC*1.2),rnd(v.RC*3.6,v.RC*4.6),[.85,.42,.22,.92],[.3,.26,.25,.5],0,.03,2.6)}
 /* ---------- montagem da fase ---------- */
-on('build',(d,w)=>{if(d.id!=='fogo')return;
+on('build',(d,w)=>{if(d.id!=='fogo'&&d.id!=='vulcao')return;const alt=d.id==='vulcao';if(alt){F.bub=null;F.led=null;F.ck=null}
  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;SP.forEach(p=>{x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);z0=Math.min(z0,p.z);z1=Math.max(z1,p.z)});Object.assign(F,{bx0:x0,bx1:x1,bz0:z0,bz1:z1,cx:(x0+x1)/2,cz:(z0+z1)/2});
  LU.nz.value=nzTex();LMf=lavaMat(true);LMn=lavaMat(false);
  F.vol=[vulcao(w,{x:x1+345,z:F.cz+50,R:265,H:235,RC:40,sd:1.3,na:Math.PI,nd:15,rv:[Math.PI,Math.PI-.72,Math.PI+.68,Math.PI-1.45,Math.PI+1.4],lx:-1,lz:.2,sr:8}),
   vulcao(w,{x:x0-395,z:F.cz+25,R:215,H:185,RC:32,sd:4.1,na:0,nd:12,rv:[0,.8,-.75,1.6],lx:1,lz:-.2,sr:5})];
- ceu(w);serras(w);const bub=lavaChao(w);placas(w);
+ ceu(w);serras(w);const bub=alt?[]:lavaChao(w);if(!alt)placas(w);
  smokeV=pool(300,smkT,false);fireP=pool(2600,dotT,true);smokeP=pool(600,smkT,false);w.add(smokeV.o,smokeP.o,fireP.o);
  /* brasas: ao longo da pista e em cima da lava */
  const ep=[],es=[];for(let i=0;i<3000;i++){let x,z;if(i<2300||!bub.length){const j=Math.random()*N|0,l=rnd(-(W/2+45),W/2+45);x=SP[j].x+RT[j].x*l;z=SP[j].z+RT[j].z*l}else{const b=bub[Math.random()*bub.length|0];x=b[0]+rnd(-12,12);z=b[2]+rnd(-12,12)}ep.push(x,rnd(0,60),z);es.push(Math.random(),Math.random(),Math.random(),Math.random())}
  const gpu=(p,a,an,vs)=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute(an,new THREE.Float32BufferAttribute(a,4));const m=new THREE.ShaderMaterial({uniforms:{t:LU.t,vh:{value:600},map:{value:dotT}},vertexShader:vs,fragmentShader:GF,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});w.add(ptsObj(g,m))};
  gpu(ep,es,'sd',EV);
  const sp=[],sv=[];F.vol.forEach((v,k)=>{for(let i=0;i<(k?220:380);i++){const a=Math.random()*TAU,r=Math.random()*v.RC*.45;sp.push(v.x+Math.cos(a)*r,v.H-8,v.z+Math.sin(a)*r);sv.push(rnd(-14,14),rnd(25,60),rnd(-14,14),Math.random()*3.4)}});gpu(sp,sv,'sv',SV);
- mkFB(w);F.fm=d.floorMat;F.on=true;F.pools={smokeV,fireP,smokeP};
- for(let i=0;i<200;i++){F.vol.forEach(v=>{v.se+=.1*v.sr;while(v.se>=1){v.se--;puff(v)}});smokeV.step(.1)}});
+ if(!alt)mkFB(w);F.fm=d.floorMat;F.on=true;F.pools={smokeV,fireP,smokeP};
+ for(let i=0;i<200;i++){F.vol.forEach(v=>{v.se+=.1*v.sr;while(v.se>=1){v.se--;puff(v)}});smokeV.step(.1)}
+ d.fogoS={vol:F.vol,bub:F.bub,fm:F.fm,led:F.led,ck:F.ck,smokeV,fireP,smokeP,cx:F.cx,cz:F.cz}});
+/* cada mapa com vulcão guarda o seu próprio estado (dá para alternar entre os dois) */
+on('stage',d=>{const S=d&&d.fogoS;if(!S)return;Object.assign(F,{vol:S.vol,bub:S.bub,fm:S.fm,led:S.led,ck:S.ck,cx:S.cx,cz:S.cz,pools:{smokeV:S.smokeV,fireP:S.fireP,smokeP:S.smokeP}});smokeV=S.smokeV;fireP=S.fireP;smokeP=S.smokeP});
 /* ---------- a cada passo da corrida: agenda e move as bolas de fogo ---------- */
 on('update',dt=>{if(!F.on||ST.id!=='fogo')return;
  if(state==='go'&&karts.length){F.fb-=dt;if(F.fb<=0){const ll=karts.some(k=>!k.fin&&k.prog>=(LAPS-1)*N);F.fb=rnd(4,7)*(ll?.7:1)*(karts.length>6?.85:1);if(!lanca())F.fb=1;else if(karts.length>=6&&Math.random()<.3)lanca()}}
@@ -3512,7 +3515,7 @@ on('update',dt=>{if(!F.on||ST.id!=='fogo')return;
   if(!b.rg.visible&&b.T-b.tt<=WARN)b.rg.visible=true;if(t>=1)boom(b)})});
 /* ---------- todo frame: animações da fase ---------- */
 const m4=new THREE.Matrix4();
-on('visuals',dt=>{if(!F.on||ST.id!=='fogo')return;if(state!=='go'&&F.balls.some(b=>b.on))clr(false);
+on('visuals',dt=>{if(!F.on||(ST.id!=='fogo'&&ST.id!=='vulcao'))return;if(state!=='go'&&F.balls.some(b=>b.on))clr(false);
  LU.t.value=tm;if(F.fm)F.fm.emissiveIntensity=.62+.18*Math.sin(tm*1.4)+.06*Math.sin(tm*3.7);if(F.ck)F.ck.material.opacity=.62+.25*Math.sin(tm*1.1);
  F.vol.forEach((v,i)=>{v.boost=Math.max(0,v.boost-dt*.7);const p=1+.08*Math.sin(tm*2.1+i)+.05*Math.sin(tm*5.3+i*2)+v.boost*.6;v.g1.scale.set(v.s1*p,v.s1*p,1);v.g1.material.opacity=Math.min(1,.75+.2*Math.sin(tm*3+i)+v.boost*.4);v.g2.material.opacity=.3+.08*Math.sin(tm*1.3+i)+v.boost*.25;
   v.se+=dt*v.sr*(1+v.boost);while(v.se>=1){v.se--;puff(v)}});
@@ -3526,7 +3529,7 @@ on('visuals',dt=>{if(!F.on||ST.id!=='fogo')return;if(state!=='go'&&F.balls.some(
   if(b.rg.visible){const f=clamp(1-(b.T-b.tt)/WARN,0,1),pu=.5+.5*Math.sin(tm*(10+f*18));b.rm.opacity=.45+.5*pu;b.cm.opacity=(.25+.35*pu)*(.4+.6*f);b.dm.opacity=.15+.3*f;b.d1.scale.setScalar(Math.max(.05,f));b.rg.scale.setScalar(1+.06*pu)}});
  F.fx.forEach(e=>{if(e.t>=7)return;e.t+=dt;const t=e.t;e.fl.visible=t<.4;if(t<.4){const s=12+46*Math.sin(t/.4*Math.PI);e.fl.scale.set(s,s,1);e.fl.material.opacity=1-t/.4}
   e.wv.visible=t<.55;if(t<.55){const s=2+t/.55*22;e.wv.scale.set(s,1,s);e.wv.material.opacity=1-t/.55}e.sc.material.opacity=t<5?1:Math.max(0,1-(t-5)/2);e.sc.visible=t<7})});
-on('start',()=>{if(!F.on)return;clr(true);if(ST.id==='fogo')karts.forEach(k=>{if(k.cam&&k.cam.far<1500){k.cam.far=1500;k.cam.updateProjectionMatrix()}})});on('finish',()=>{if(F.on)clr(false)});on('stage',()=>{if(F.on)clr(true)});
+on('start',()=>{if(!F.on)return;clr(true);if(ST.id==='fogo'||ST.id==='vulcao')karts.forEach(k=>{if(k.cam&&k.cam.far<1500){k.cam.far=1500;k.cam.updateProjectionMatrix()}})});on('finish',()=>{if(F.on)clr(false)});on('stage',()=>{if(F.on)clr(true)});
 /* kart que cai na lava: espirra fogo e fumaça */
 on('fall',k=>{if(!F.on||ST.id!=='fogo')return;for(let i=0;i<26;i++){const a=Math.random()*TAU,s=rnd(4,14);fireP.add(k.x,.5,k.z,Math.cos(a)*s,rnd(8,22),Math.sin(a)*s,rnd(.5,.9),rnd(2.5,4),rnd(5,8),[1,.85,.4,1],[1,.25,.02,0],26,1.2)}
  for(let i=0;i<8;i++)smokeP.add(k.x+rnd(-2,2),1,k.z+rnd(-2,2),rnd(-2,2),rnd(4,8),rnd(-2,2),rnd(1.5,2.2),5,14,[.3,.13,.08,.6],[.09,.08,.08,0],-1,.5)});
@@ -6208,8 +6211,8 @@ const P={id:'vulcao',nome:'VULCÃO MALUCO 2.0',tema:'fogo',pts:PT.map(a=>({x:a[0
 const d=Object.assign(PISTAS.defPista(P),{id:'vulcao',nome:'VULCÃO MALUCO 2.0',ico:'🌋',dif:5,esc:ESC*.85,saia:0x2E2422,editavel:false,
  sub:'Fortaleza, túnel de lava, espiral grudenta, rampa sobre a lava, cratera do dino e ponte que desmorona',
  menu:'túnel de lava · espiral · cratera · ponte',fallMsg:'🔥 CAIU NA LAVA! ⏱ 2s',build:cenVulcao});
-STAGES.vulcao=d;d.hidden=true; /* escondido a pedido: o Vulcão antigo (fogo) voltou para o menu e o campeonato */
-try{if(localStorage.getItem('mmt_kart_fase')==='vulcao')localStorage.setItem('mmt_kart_fase','fogo')}catch(e){}
+STAGES.vulcao=d;if(STAGES.fogo)STAGES.fogo.hidden=true;{const i=CAMP.indexOf('fogo');if(i>=0)CAMP[i]='vulcao'}
+try{if(localStorage.getItem('mmt_kart_fase')==='fogo')localStorage.setItem('mmt_kart_fase','vulcao')}catch(e){}
 const ex=k=>k+(k>9?10:0),uO=k=>d.uk[ex(k)],LNr=c=>new THREE.Color(c).convertSRGBToLinear(),HT=PISTAS.HT,TB=PISTAS.TB,ts=i=>((i%N)+N)%N;
 const V={on:false,rocks:[],rT:1,ponte:null,emb:0};
 /* chamado logo antes da pista ser montada (já existe a curva): calcula as zonas */
@@ -6254,10 +6257,7 @@ function cenVulcao(dd){const hw=W/2;V.tochas=[];V.band=[];V.olhos=[];V.fum=[];
   for(let k=0;k<=n;k++){const t=k/n,y=3-Math.sin(t*Math.PI)*2.4,pl=new THREE.Mesh(chGeo('vpk',()=>new THREE.BoxGeometry(4,.3,1.6)),madeira);pl.position.set(sx+(ex2-sx)*t,y,sz+(ez-sz)*t);pl.rotation.y=ang;world.add(pl)}
   for(const s of[-1,1]){const pts=[];for(let k=0;k<=12;k++){const t=k/12;pts.push(new THREE.Vector3(sx+(ex2-sx)*t+Math.cos(ang)*s*2,4.6-Math.sin(t*Math.PI)*2.4,sz+(ez-sz)*t-Math.sin(ang)*s*2))}
    world.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),16,.12,4),corda))}}
- /* vulcões ao longe, soltando fumaça */
- for(let k=0;k<7;k++){const a=k/7*Math.PI*2+.3,R=Math.max(x1-x0,z1-z0)*.75+200+Math.random()*250,x=cx+Math.sin(a)*R,z=cz+Math.cos(a)*R*.8,h=170+Math.random()*120,r=h*.65;
-  const v=new THREE.Mesh(new THREE.ConeGeometry(r,h,10,1,true),S(0x2A2022));v.position.set(x,h/2-2,z);world.add(v);const cap=new THREE.Mesh(new THREE.CylinderGeometry(r*.16,r*.2,4,10),new THREE.MeshBasicMaterial({color:0xFF6A1A}));cap.position.set(x,h-3,z);world.add(cap);
-  const gl=new THREE.Sprite(glowM);gl.scale.set(r*.9,r*.6,1);gl.position.set(x,h+4,z);world.add(gl);for(let f=0;f<4;f++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:fumT,transparent:true,depthWrite:false,fog:false}));s.position.set(x,h,z);world.add(s);V.fum.push({s,x,z,h,r,t:f/4})}}
+ /* vulcões, céu e cordilheira: os do Vulcão antigo (EXTRA · FOGO monta para 'vulcao' também) */
  /* FORTALEZA na largada: muralhas com ameias, torres, portão, bandeiras e tochas */
  const iA=ts(Math.round(-.03*N)),iB=Math.round(.045*N);for(let s0=-Math.round(.03*N);s0<iB;s0+=3){const i=ts(s0);for(const s of[-1,1]){const l=s*(hw+11),x=SP[i].x+RT[i].x*l,z=SP[i].z+RT[i].z*l,j=ts(i+3),x2=SP[j].x+RT[j].x*l,z2=SP[j].z+RT[j].z*l,L=Math.hypot(x2-x,z2-z),h=Math.atan2(x2-x,z2-z);
   const w=new THREE.Mesh(chGeo('vmu',()=>new THREE.BoxGeometry(3,1,1)),pedraC);w.position.set((x+x2)/2,(HT[i]+14)/2,(z+z2)/2);w.scale.set(1,HT[i]+14,L+.2);w.rotation.y=h;world.add(w);
@@ -6275,7 +6275,7 @@ function cenVulcao(dd){const hw=W/2;V.tochas=[];V.band=[];V.olhos=[];V.fum=[];
    c.position.set(SP[j].x+RT[j].x*l,y-len/2,SP[j].z+RT[j].z*l);c.scale.set(.6+Math.random()*.6,len,.6+Math.random()*.6);c.rotation.x=Math.PI;world.add(c)}
   for(const s of[-1,1])world.add(ribbon(i0,i1,s*(hw+2.2),s*(hw+3.6),.4,new THREE.MeshBasicMaterial({color:0xFF6A1A}),8))});
  /* espiral e rampa */
- (d.esp||[]).forEach(([a])=>placa(a-.003,'ESPIRAL GRUDENTA','#22D3FF','A faixa azul segura o kart!'));
+ (d.esp||[]).forEach(([a])=>placa(a-.03,'ESPIRAL GRUDENTA','#22D3FF','A faixa azul segura o kart!'));
  (d.gI||[]).forEach(g=>placa(ts(g.r0-Math.round(30/SEG))/N,'RIO DE LAVA','#FF6B22','Acelere e pule!'));
  /* cratera com o crânio gigante e pontas de pedra */
  {const uc=uO(14),ic=ts(Math.round(uc*N)),t0=TG[ts(ic-10)],t1=TG[ts(ic+10)],turn=wrap(Math.atan2(t1.x,t1.z)-Math.atan2(t0.x,t0.z)),out=-(Math.sign(turn)||1);placa(uO(13),'CRATERA DO DINO','#FFD43B','Olha o tamanho desse crânio!');
